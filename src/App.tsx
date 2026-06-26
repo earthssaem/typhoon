@@ -25,7 +25,8 @@ const initialState: GameState = {
 
 function load(): GameState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // sessionStorage: 탭을 닫으면 자동 초기화 (같은 탭의 새로고침에서는 유지)
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if (raw) return { ...initialState, ...JSON.parse(raw) };
   } catch {
     /* ignore */
@@ -38,7 +39,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       /* ignore */
     }

@@ -1479,7 +1479,7 @@ body {
 .mannequin-box .char-svg { width: 168px; height: 272px; background: transparent; }
 .worn-info { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .worn-group { display: flex; align-items: flex-start; gap: 8px; }
-.worn-label { font-size: 11px; font-weight: 800; color: #8a6d9b; flex: 0 0 64px; padding-top: 3px; }
+.worn-label { font-size: 11px; font-weight: 800; color: #8a6d9b; flex: 0 0 80px; padding-top: 3px; white-space: nowrap; }
 .worn-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
 .worn-chip {
   background: #eaf2ff; border: 1px solid #d6e3fb; color: var(--brand-d);
@@ -1502,8 +1502,17 @@ body {
   align-self: flex-start; background: #ffd34e; color: #5a4a10; font-weight: 800; font-size: 12px;
   padding: 4px 10px; border-radius: 6px; transform: rotate(-6deg);
 }
-.sc-mesh { display: grid; gap: 12px; opacity: 0.5; }
-.sc-mesh span { height: 0; border-top: 2px dashed #9fc0dd; }
+.sc-pocket {
+  flex: 1; margin-top: 12px; border: 2px dashed #6f9bbd; border-radius: 8px;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 7px, #ffffff14 7px 8px),
+    repeating-linear-gradient(-45deg, transparent 0 7px, #ffffff14 7px 8px);
+  display: flex; align-items: center; justify-content: center;
+}
+.sc-pocket-label {
+  font-size: 9px; font-weight: 800; letter-spacing: 1px; color: #9fc0dd;
+  opacity: 0.7; transform: rotate(-4deg);
+}
 .sc-base {
   background: #2f5170; border-radius: 10px; padding: 10px; position: relative;
 }

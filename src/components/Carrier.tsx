@@ -97,11 +97,11 @@ export function Carrier({ go, patch, state }: StepProps) {
 
           <div className="suitcase-box">
             <div className={`suitcase${isFull ? ' full' : ''}`}>
-              {/* 뚜껑 */}
+              {/* 뚜껑 (메시 포켓) */}
               <div className="sc-lid">
                 <div className="sc-sticker">🌀 TRIP</div>
-                <div className="sc-mesh">
-                  <span /><span /><span />
+                <div className="sc-pocket">
+                  <span className="sc-pocket-label">MESH POCKET</span>
                 </div>
               </div>
               {/* 본체 */}

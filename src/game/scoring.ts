@@ -22,7 +22,7 @@ export interface ScoreResult {
 }
 
 // 캐리어 물품이 실제 날씨에 비춰 "적절"한지 판단하는 규칙
-function recommendedItems(c: TyphoonCase): { id: string; reason: string }[] {
+export function recommendedItems(c: TyphoonCase): { id: string; reason: string }[] {
   const a = c.actual;
   const rec: { id: string; reason: string }[] = [];
   // 비

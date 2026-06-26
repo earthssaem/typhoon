@@ -1,20 +1,63 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { StepProps } from '../App';
 import { CASES } from '../data/cases';
 import { ForecastTrackMap } from './svg/ForecastTrackMap';
-import { Character } from './svg/Character';
 import { GroupPhoto } from './svg/GroupPhoto';
-import { scoreGame, dressCharacter } from '../game/scoring';
+import { TripScene } from './svg/TripScene';
+import { itemById } from '../data/items';
+import { evaluateEnding } from '../game/ending';
 
-// STEP 8. 실제 수학여행 엔딩
-export function Ending({ go, state }: StepProps) {
+// STEP 8. 실제 수학여행 엔딩 — 5장면 시퀀스
+// 1 다음날 전환 → 2 실제결과 공개 → 3 캐리어 열기 → 4 여행 애니메이션 → 5 기념사진+요약
+export function Ending({ go, state, reset }: StepProps) {
   const c = CASES[state.destination!];
-  const a = c.actual;
-  const score = useMemo(() => scoreGame(state, c), [state, c]);
-  const dress = useMemo(() => dressCharacter(state, c), [state, c]);
+  const r = useMemo(() => evaluateEnding(state, c), [state, c]);
+  const a = r.actualWeather;
+
+  const reduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  // 인트로 전환(장면1) 재생 여부
+  const [daybreak, setDaybreak] = useState(true);
+  const timers = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (reduced) {
+      setDaybreak(false);
+      return;
+    }
+    const t = window.setTimeout(() => setDaybreak(false), 3200);
+    timers.current.push(t);
+    return () => clearTimeout(t);
+  }, [reduced]);
 
   const comfortLabel =
-    dress.comfort >= 80 ? '아주 쾌적' : dress.comfort >= 60 ? '대체로 무난' : dress.comfort >= 40 ? '다소 불편' : '많이 불편';
+    r.dress.comfort >= 80 ? '아주 쾌적' : r.dress.comfort >= 60 ? '대체로 무난' : r.dress.comfort >= 40 ? '다소 불편' : '많이 불편';
+
+  // 장면1: 다음날 전환 오버레이
+  if (daybreak) {
+    return (
+      <section className="card ending daybreak-card fade-in">
+        <button className="chip-btn skip-float" onClick={() => setDaybreak(false)}>건너뛰기 ⏭</button>
+        <div className="daybreak">
+          <div className="db-suitcase">🧳<span className="db-close">…찰칵</span></div>
+          <div className="db-night" aria-hidden>
+            <span className="db-moon">🌙</span>
+            <span className="db-star s1">✨</span>
+            <span className="db-star s2">⭐</span>
+          </div>
+          <div className="db-date">
+            <span className="db-from">D-1</span>
+            <span className="db-arrow">→</span>
+            <span className="db-to">D-DAY</span>
+          </div>
+          <div className="db-sun" aria-hidden>🌅</div>
+          <h2 className="db-line">수학여행 당일 아침이 밝았습니다.</h2>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="card fade-in ending">
@@ -40,74 +83,90 @@ export function Ending({ go, state }: StepProps) {
         </div>
       </div>
 
-      {/* ②③ 캐리어 열기 + 실제 날씨 속 여행 */}
+      {/* ② 캐리어 열기 */}
       <div className="reveal">
         <h3>② 캐리어 열기 — 내가 챙긴 것만 사용</h3>
-        <div className={`scene ${c.ending.bgClass}`}>
-          <Character outfit={dress.outfit} />
-          <div className="scene-info">
-            <div className="comfort">
-              쾌적도 <b>{dress.comfort}</b> / 100 <span className="comfort-label">({comfortLabel})</span>
-              <div className="comfort-bar"><div style={{ width: `${dress.comfort}%` }} /></div>
-            </div>
-            <ul className="scene-notes">
-              {dress.notes.map((n, i) => (
-                <li key={i}>{n}</li>
+        <div className="open-carrier">
+          {r.selectedItems.length === 0 && <span className="hint-small">담은 물품이 없어요.</span>}
+          {r.selectedItems.map((id, i) => {
+            const it = itemById(id)!;
+            const needed = r.itemMatches.some((m) => m.id === id);
+            return (
+              <span
+                key={id}
+                className={`oc-item${needed ? ' needed' : ''}`}
+                style={{ animationDelay: `${reduced ? 0 : i * 0.12}s` }}
+                title={needed ? '실제 날씨에 도움이 된 물품' : undefined}
+              >
+                {it.emoji}<small>{it.name}</small>
+                {needed && <i className="oc-star">⭐</i>}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ③ 실제 날씨 속 여행 */}
+      <div className="reveal">
+        <h3>③ 실제 날씨 속 수학여행</h3>
+        <TripScene result={r} />
+        <div className="comfort">
+          쾌적도 <b>{r.dress.comfort}</b> / 100 <span className="comfort-label">({comfortLabel})</span>
+          <div className="comfort-bar"><div style={{ width: `${r.dress.comfort}%` }} /></div>
+        </div>
+        <ul className="scene-notes dark-notes">
+          {r.dress.notes.map((n, i) => <li key={i}>{n}</li>)}
+        </ul>
+      </div>
+
+      {/* ④ 기념사진 */}
+      <div className="reveal">
+        <h3>④ 단체 기념사진</h3>
+        <GroupPhoto
+          mode="ending"
+          mood={a.rainy || a.windy ? 'storm' : a.hot ? 'sunny' : 'cloudy'}
+          comfort={r.dress.comfort}
+          headline={r.overallResult.headline}
+        />
+        <p className="photo-cap">
+          {r.cityName} 수학여행 도착! · 실제 기온 {a.temp}℃ · {a.rainy ? '비' : '대체로 흐림'} · {a.windy ? '강한 바람' : '약한 바람'}
+        </p>
+      </div>
+
+      {/* ⑤ 결과 요약 (날씨/일정/준비물) */}
+      <div className="score-box">
+        <div className="grade-badge">{r.overallResult.grade}</div>
+        <div className="score-total">{r.overallResult.total} / {r.overallResult.max}점</div>
+
+        <div className="result-sections">
+          <div className="rs-block">
+            <h4>🌦️ 날씨 판단</h4>
+            <ul>
+              {r.weatherResult.map((w) => (
+                <li key={w.label} className={w.ok ? 'ok' : 'miss'}>{w.ok ? '✅' : '⚠️'} {w.sentence}</li>
               ))}
+            </ul>
+          </div>
+          <div className="rs-block">
+            <h4>📅 일정 판단</h4>
+            <ul><li className={r.scheduleResult.ok ? 'ok' : 'miss'}>{r.scheduleResult.ok ? '✅' : '⚠️'} {r.scheduleResult.sentence}</li></ul>
+          </div>
+          <div className="rs-block">
+            <h4>🧳 준비물 선택</h4>
+            <ul>
+              {r.itemMatches.slice(0, 3).map((m) => <li key={m.id} className="ok">✅ {m.name} — {m.reason}</li>)}
+              {r.missingItems.slice(0, 3).map((m) => <li key={m.id} className="miss">⚠️ {m.name} 부족 — {m.reason}</li>)}
+              {r.unnecessaryItems.length > 0 && (
+                <li className="muted">· 이번 날씨엔 불필요: {r.unnecessaryItems.map((u) => u.name).join(', ')}</li>
+              )}
             </ul>
           </div>
         </div>
       </div>
 
-      {/* ④ 기념사진 (애니메이션 단체사진) */}
-      <div className="reveal">
-        <h3>③ 단체 기념사진</h3>
-        <GroupPhoto
-          mode="ending"
-          mood={a.rainfall >= 30 || a.maxGust >= 25 ? 'storm' : a.temp >= 24 ? 'sunny' : 'cloudy'}
-          comfort={dress.comfort}
-          headline={c.ending.headline}
-        />
-        <p className="photo-cap">
-          실제 기온 {a.temp}℃, {a.rainfall >= 30 ? '비' : '대체로 흐림'}, {a.maxGust >= 25 ? '강한 바람' : '약한 바람'}.
-          {' '}
-          {dress.comfort >= 70
-            ? '날씨에 잘 대비해 쾌적하게 여행했습니다!'
-            : '다음엔 날씨 분석을 더 반영해 준비물을 챙겨봐요!'}
-        </p>
-      </div>
-
-      {/* 채점 + 피드백 */}
-      <div className="score-box">
-        <div className="grade-badge">{score.grade}</div>
-        <div className="score-total">
-          {score.total} / {score.max}점
-        </div>
-        <div className="score-lines">
-          {score.lines.map((l) => (
-            <div key={l.label} className={`score-line${l.points === l.max ? ' full' : l.points === 0 ? ' zero' : ''}`}>
-              <span className="sl-label">{l.label}</span>
-              <span className="sl-pts">{l.points}/{l.max}</span>
-              <span className="sl-detail">{l.detail}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="ai-feedback">
-        <h4>🤖 종합 피드백</h4>
-        {score.feedback.map((f, i) => (
-          <p key={i}>{f}</p>
-        ))}
-        <p className="hint-small">
-          ※ 이 피드백은 규칙 기반으로 생성되었습니다. (생성형 AI API 연결 시 더 풍부한 코멘트로 확장
-          가능)
-        </p>
-      </div>
-
       <div className="actions">
-        <button className="ghost-btn" onClick={() => go('carrier')}>← 캐리어 다시 꾸리기</button>
-        <button className="primary-btn" onClick={() => go('destination')}>다른 목적지로 도전 →</button>
+        <button className="ghost-btn" onClick={() => go('destination')}>다른 목적지 체험하기</button>
+        <button className="primary-btn" onClick={reset}>처음부터 다시 하기 ↻</button>
       </div>
     </section>
   );

@@ -48,7 +48,7 @@ export default function App() {
   const patch = (p: Partial<GameState>) => setState((s) => ({ ...s, ...p }));
   const reset = () => setState({ ...initialState });
 
-  const props = { state, go, patch };
+  const props = { state, go, patch, reset };
 
   return (
     <div className="app">
@@ -90,4 +90,5 @@ export interface StepProps {
   state: GameState;
   go: (step: StepId) => void;
   patch: (p: Partial<GameState>) => void;
+  reset: () => void;
 }

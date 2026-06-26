@@ -370,9 +370,11 @@ body {
 /* 지도 */
 .korea-map {
   width: 100%;
+  max-width: 500px;
   aspect-ratio: 1;
   border-radius: 12px;
   border: 1px solid var(--line);
+  margin: 0 auto;
 }
 
 /* DESTINATION */
@@ -1554,6 +1556,7 @@ body {
   .reveal-grid {
     grid-template-columns: 1fr;
   }
+  .dest-layout { gap: 12px; }
   .task-cards { grid-template-columns: 1fr; }
   .ctrl-group { width: 100%; }
   .scene {

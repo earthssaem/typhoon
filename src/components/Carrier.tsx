@@ -1,10 +1,23 @@
 import { useState } from 'react';
 import type { StepProps } from '../App';
+import type { CarrierItem } from '../types';
 import { CASES } from '../data/cases';
 import { ITEMS, CARRIER_CAPACITY, itemById } from '../data/items';
 import { packedSlots } from '../game/scoring';
+import { Character } from './svg/Character';
 
-// STEP 7. 캐리어 꾸리기 (드래그앤드롭 + 클릭 토글)
+// 옷장 분류 (의상실 느낌으로 그룹화)
+const GROUPS: { cat: CarrierItem['category']; label: string; icon: string }[] = [
+  { cat: 'top', label: '상의', icon: '👕' },
+  { cat: 'outer', label: '겉옷', icon: '🧥' },
+  { cat: 'bottom', label: '하의', icon: '👖' },
+  { cat: 'shoes', label: '신발', icon: '👟' },
+  { cat: 'rain', label: '비 대비', icon: '🌂' },
+  { cat: 'accessory', label: '소품', icon: '🧢' },
+  { cat: 'extra', label: '기타', icon: '🎒' },
+];
+
+// STEP 7. 캐리어 꾸리기 — 캐릭터에게 옷 입히듯 담기
 export function Carrier({ go, patch, state }: StepProps) {
   const c = CASES[state.destination!];
   const used = packedSlots(state.packed);
@@ -21,87 +34,76 @@ export function Carrier({ go, patch, state }: StepProps) {
     patch({ packed: [...state.packed, id] });
   };
   const remove = (id: string) => patch({ packed: state.packed.filter((p) => p !== id) });
+  const toggle = (id: string) => (state.packed.includes(id) ? remove(id) : add(id));
 
-  const available = ITEMS.filter((i) => !state.packed.includes(i.id));
-
-  // 캐리어 칸 시각화
-  const cells: (string | null)[] = [];
-  state.packed.forEach((id) => {
-    const it = itemById(id)!;
-    for (let k = 0; k < it.slots; k++) cells.push(k === 0 ? id : `${id}__`);
-  });
-  while (cells.length < CARRIER_CAPACITY) cells.push(null);
+  // 현재 담은 물품으로 캐릭터 미리보기
+  const outfit: CarrierItem[] = state.packed.map((id) => itemById(id)!).filter(Boolean);
 
   return (
-    <section className="card fade-in">
-      <h2>STEP 7 · 캐리어 꾸리기 — {c.cityName}</h2>
+    <section className="card fade-in boutique">
+      <h2>STEP 7 · 캐리어 꾸미기 — {c.cityName}</h2>
       <p className="q">
-        캐리어는 <b>{CARRIER_CAPACITY}칸</b>뿐입니다. 모든 물품을 담을 수 없으니, 내가 판단한 날씨에
-        맞게 우선순위를 정해 담으세요. (물품 클릭 또는 드래그)
+        옷장에서 골라 캐리어에 담으면 친구가 바로 입어 봐요! 캐리어는 <b>{CARRIER_CAPACITY}칸</b>뿐이니,
+        내가 판단한 날씨에 맞게 우선순위를 정해 담으세요. (물품을 누르면 담기 / 다시 누르면 빼기)
       </p>
 
-      <div className="carrier-layout">
-        <div className="store">
-          <h4>준비물 ({available.length})</h4>
-          <div className="item-grid">
-            {available.map((it) => (
-              <button
-                key={it.id}
-                className={`item${overflow === it.id ? ' shake' : ''}`}
-                draggable
-                onDragStart={(e) => e.dataTransfer.setData('text/plain', it.id)}
-                onClick={() => add(it.id)}
-                title={`${it.name} · ${it.slots}칸`}
-              >
-                <span className="item-emoji">{it.emoji}</span>
-                <span className="item-name">{it.name}</span>
-                <span className="item-slot">{it.slots}칸</span>
-              </button>
-            ))}
+      <div className="boutique-layout">
+        {/* 좌: 캐릭터 미리보기 + 캐리어 용량 */}
+        <div className="boutique-stage">
+          <div className="mannequin">
+            <Character outfit={outfit} />
           </div>
-        </div>
-
-        <div className="carrier-side">
-          <div
-            className={`carrier${used >= CARRIER_CAPACITY ? ' full' : ''}`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const id = e.dataTransfer.getData('text/plain');
-              if (id) add(id);
-            }}
-          >
+          <div className={`carrier-meter${used >= CARRIER_CAPACITY ? ' full' : ''}`}>
             <div className="carrier-head">
               🧳 캐리어 <span>{used} / {CARRIER_CAPACITY}칸</span>
             </div>
             <div className="capacity-bar">
               <div className="capacity-fill" style={{ width: `${(used / CARRIER_CAPACITY) * 100}%` }} />
             </div>
-            <div className="carrier-cells">
-              {cells.map((cell, i) => {
-                if (cell === null) return <div key={i} className="cell empty" />;
-                if (cell.endsWith('__')) return <div key={i} className="cell occupied span" />;
-                const it = itemById(cell)!;
+            <div className="packed-chips">
+              {state.packed.length === 0 && <span className="hint-small">아직 담은 물품이 없어요.</span>}
+              {state.packed.map((id) => {
+                const it = itemById(id)!;
                 return (
-                  <button key={i} className="cell occupied" onClick={() => remove(cell)} title="빼기">
-                    <span>{it.emoji}</span>
-                    <small>{it.name}</small>
+                  <button key={id} className="packed-chip" onClick={() => remove(id)} title="빼기">
+                    {it.emoji} {it.name} <span className="chip-x">×</span>
                   </button>
                 );
               })}
             </div>
-            <p className="hint-small">담은 물품을 클릭하면 다시 뺄 수 있어요.</p>
           </div>
+        </div>
 
-          <div className="connect-hint">
-            <h4>날씨 ↔ 물품 연결</h4>
-            <ul>
-              <li>높은 기온 → 반팔 / 낮은 기온 → 얇은 긴팔·바람막이</li>
-              <li>지속적인 비 → 방수 재킷·방수 신발·여벌 양말</li>
-              <li>강한 바람 → 우산보다 우비 · 많은 비 → 방수팩</li>
-              <li>맑고 더운 날 → 모자·선크림</li>
-            </ul>
-          </div>
+        {/* 우: 옷장 (분류별) */}
+        <div className="wardrobe">
+          <h4>🚪 옷장</h4>
+          {GROUPS.map((g) => {
+            const items = ITEMS.filter((i) => i.category === g.cat);
+            if (items.length === 0) return null;
+            return (
+              <div key={g.cat} className="wardrobe-group">
+                <div className="group-label">{g.icon} {g.label}</div>
+                <div className="hanger-row">
+                  {items.map((it) => {
+                    const on = state.packed.includes(it.id);
+                    return (
+                      <button
+                        key={it.id}
+                        className={`hanger${on ? ' on' : ''}${overflow === it.id ? ' shake' : ''}`}
+                        onClick={() => toggle(it.id)}
+                        title={`${it.name} · ${it.slots}칸`}
+                      >
+                        <span className="hanger-emoji">{it.emoji}</span>
+                        <span className="hanger-name">{it.name}</span>
+                        <span className="hanger-slot">{it.slots}칸</span>
+                        {on && <span className="hanger-check">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

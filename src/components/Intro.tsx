@@ -1,11 +1,12 @@
 import type { StepProps } from '../App';
+import { GroupPhoto } from './svg/GroupPhoto';
 
 // STEP 1. 문제 상황 제시
 export function Intro({ go }: StepProps) {
   return (
     <section className="card intro fade-in">
       <div className="intro-hero">
-        <div className="intro-emoji">🌀☔️🧳</div>
+        <GroupPhoto mode="intro" mood="cloudy" headline="수학여행 D-1 · 다 같이 출발 준비!" />
         <h1>내일이 수학여행인데…… 태풍이 올라온대!!</h1>
         <p className="lead">
           태풍이 어느 방향으로 이동할지, 우리 수학여행지에는 어떤 날씨가 나타날지 분석해 보세요.

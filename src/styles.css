@@ -879,6 +879,260 @@ body {
   margin: 6px 0;
 }
 
+/* ───────── 단체사진 애니메이션 (GroupPhoto) ───────── */
+.group-photo {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 460px;
+  margin: 0 auto 6px;
+  box-shadow: var(--shadow);
+  border: 6px solid #fff;
+}
+.group-photo.mood-sunny {
+  background: linear-gradient(180deg, #bfe3ff, #eaf6ff);
+}
+.group-photo.mood-cloudy {
+  background: linear-gradient(180deg, #aebfd0, #d9e2ec);
+}
+.group-photo.mood-storm {
+  background: linear-gradient(180deg, #59657a, #8893a6);
+}
+.gp-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gp-spin {
+  transform-origin: 0 0;
+  animation: gp-spin 3.2s linear infinite;
+}
+@keyframes gp-spin {
+  to { transform: rotate(360deg); }
+}
+.gp-drop {
+  animation: gp-drop 0.9s linear infinite;
+}
+@keyframes gp-drop {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 0.9; }
+  100% { transform: translateY(190px); opacity: 0; }
+}
+.gp-student { transform-origin: center bottom; animation: gp-bob 2.4s ease-in-out infinite; }
+@keyframes gp-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.gp-wave .gp-arm-r { transform-box: fill-box; transform-origin: top center; animation: gp-wave 1s ease-in-out infinite; }
+@keyframes gp-wave {
+  0%, 100% { transform: rotate(8deg); }
+  50% { transform: rotate(-26deg); }
+}
+.gp-sun { animation: gp-sun 6s linear infinite; transform-origin: center; }
+@keyframes gp-sun { to { transform: rotate(360deg); } }
+.gp-confetti-piece { animation: gp-fall 2.4s linear infinite; }
+@keyframes gp-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(210px) rotate(220deg); opacity: 0; }
+}
+.gp-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: gp-flash 2.6s ease-out 0.2s 1;
+  pointer-events: none;
+}
+@keyframes gp-flash {
+  0% { opacity: 0; }
+  6% { opacity: 0.85; }
+  18% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.gp-frame {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: linear-gradient(0deg, #00000055, transparent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gp-shutter { font-size: 18px; }
+
+/* 엔딩 사진 캡션 */
+.photo-cap {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
+/* ───────── 시뮬레이터 유사 3D ───────── */
+.sim3d-wrap { display: flex; flex-direction: column; }
+.sim3d-stage {
+  perspective: 900px;
+  background: radial-gradient(circle at 50% 38%, #f3f7fc, #e6edf6);
+  border-radius: 12px;
+  padding: 18px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  cursor: grab;
+  overflow: hidden;
+}
+.sim3d-stage:active { cursor: grabbing; }
+.sim3d-disc {
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.05s linear;
+  filter: drop-shadow(0 18px 16px rgba(20, 40, 70, 0.28));
+}
+.sim3d-svg { width: 100%; display: block; }
+.sim3d-spiral { transform-origin: 200px 200px; animation: ty-spin 14s linear infinite; }
+.sim3d-spiral.paused { animation-play-state: paused; }
+@keyframes ty-spin { to { transform: rotate(360deg); } }
+.sim3d-disc.calm { filter: drop-shadow(0 18px 16px rgba(20, 40, 70, 0.18)); }
+.sim3d-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 8px 0 10px;
+}
+.region-picker {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.region-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+.region-btn:hover { border-color: var(--brand); }
+.region-btn.on { border-color: var(--brand); background: #eaf2ff; color: var(--brand-d); font-weight: 700; }
+.region-btn.seen { box-shadow: inset 3px 0 0 var(--safe); }
+.region-emoji { font-size: 18px; }
+.seen-check { position: absolute; right: 8px; color: var(--safe); font-weight: 800; }
+.calm-tag { background: #e6efff !important; color: var(--brand-d); }
+.why-box {
+  margin-top: 14px;
+  background: #fff8e9;
+  border: 1px solid #f1e0b5;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.why-box h4 { margin: 0 0 6px; }
+.why-box p { margin: 0; font-size: 13px; line-height: 1.7; color: #5a4f33; }
+
+/* ───────── 캐리어 의상실 ───────── */
+.boutique-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 18px;
+}
+.boutique-stage { display: flex; flex-direction: column; gap: 14px; }
+.mannequin {
+  background: linear-gradient(180deg, #fbeffb, #eef3ff);
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ecdcf0;
+}
+.carrier-meter {
+  border: 2px dashed #c9b6da;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #faf6ff;
+}
+.carrier-meter.full { border-color: var(--danger); }
+.packed-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.packed-chip {
+  border: 1px solid var(--brand);
+  background: #eaf2ff;
+  color: var(--brand-d);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chip-x { color: var(--danger); font-weight: 800; margin-left: 2px; }
+.wardrobe {
+  background: #faf7f2;
+  border: 1px solid #ece3d6;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.wardrobe-group { margin-bottom: 10px; }
+.group-label { font-size: 13px; font-weight: 700; color: #8a6d4b; margin-bottom: 6px; }
+.hanger-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.hanger {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.12s;
+}
+.hanger:hover { border-color: var(--brand); transform: translateY(-2px); }
+.hanger.on { border-color: var(--brand); background: #eaf2ff; box-shadow: 0 0 0 2px rgba(42,109,240,0.15); }
+.hanger-emoji { font-size: 24px; }
+.hanger-slot { font-size: 10px; color: var(--muted); }
+.hanger-check { position: absolute; top: 4px; right: 6px; color: var(--safe); font-weight: 800; }
+.hanger.shake { animation: shake 0.4s; border-color: var(--danger); }
+
+/* ───────── 자료 분석: 해석법 + 직접 해석 ───────── */
+.howto-list {
+  padding-left: 18px;
+  line-height: 1.7;
+  font-size: 14px;
+  margin: 6px 0 4px;
+}
+.read-prompts { display: flex; flex-direction: column; gap: 10px; }
+.read-prompt {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f9fbfe;
+}
+.read-q { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.read-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.read-opt {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.read-opt:hover { border-color: var(--brand); }
+.read-opt.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+
 /* 반응형 */
 @media (max-width: 860px) {
   .sim-grid,
@@ -888,6 +1142,7 @@ body {
   .forecast-card,
   .evidence-grid,
   .carrier-layout,
+  .boutique-layout,
   .reveal-grid {
     grid-template-columns: 1fr;
   }

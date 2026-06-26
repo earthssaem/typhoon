@@ -3,6 +3,7 @@ import type { StepProps } from '../App';
 import { CASES } from '../data/cases';
 import { ForecastTrackMap } from './svg/ForecastTrackMap';
 import { Character } from './svg/Character';
+import { GroupPhoto } from './svg/GroupPhoto';
 import { scoreGame, dressCharacter } from '../game/scoring';
 
 // STEP 8. 실제 수학여행 엔딩
@@ -58,19 +59,22 @@ export function Ending({ go, state }: StepProps) {
         </div>
       </div>
 
-      {/* ④ 기념사진 */}
-      <div className="photo-card">
-        <div className="photo-emoji">📸</div>
-        <div>
-          <b>{c.ending.headline}</b>
-          <p>
-            실제 기온 {a.temp}℃, {a.rainfall >= 30 ? '비' : '대체로 흐림'}, {a.maxGust >= 25 ? '강한 바람' : '약한 바람'}.
-            <br />
-            {dress.comfort >= 70
-              ? '날씨에 잘 대비해 쾌적하게 여행했습니다!'
-              : '다음엔 날씨 분석을 더 반영해 준비물을 챙겨봐요!'}
-          </p>
-        </div>
+      {/* ④ 기념사진 (애니메이션 단체사진) */}
+      <div className="reveal">
+        <h3>③ 단체 기념사진</h3>
+        <GroupPhoto
+          mode="ending"
+          mood={a.rainfall >= 30 || a.maxGust >= 25 ? 'storm' : a.temp >= 24 ? 'sunny' : 'cloudy'}
+          comfort={dress.comfort}
+          headline={c.ending.headline}
+        />
+        <p className="photo-cap">
+          실제 기온 {a.temp}℃, {a.rainfall >= 30 ? '비' : '대체로 흐림'}, {a.maxGust >= 25 ? '강한 바람' : '약한 바람'}.
+          {' '}
+          {dress.comfort >= 70
+            ? '날씨에 잘 대비해 쾌적하게 여행했습니다!'
+            : '다음엔 날씨 분석을 더 반영해 준비물을 챙겨봐요!'}
+        </p>
       </div>
 
       {/* 채점 + 피드백 */}

@@ -5,8 +5,8 @@ import { TyphoonScene } from './TyphoonScene';
 interface Props {
   point: { x: number; z: number };
   setPoint: (p: { x: number; z: number }) => void;
-  dragging: boolean;
-  setDragging: (b: boolean) => void;
+  moveMode: boolean;
+  exitMoveMode: () => void;
   showHeading: boolean;
   showSemicircle: boolean;
   showNames: boolean;
@@ -14,22 +14,23 @@ interface Props {
   reduced: boolean;
   lowPerf: boolean;
   view: 'top' | 'tilt';
+  ab: { a: { x: number; z: number }; b: { x: number; z: number } };
 }
 
 export default function Sim3DCanvas(p: Props) {
   return (
     <Canvas
-      camera={{ position: [0, 12, 15], fov: 45 }}
+      camera={{ position: [0, 12, 14], fov: 45 }}
       dpr={p.lowPerf ? 1 : [1, 2]}
       style={{ position: 'absolute', inset: 0 }}
       resize={{ scroll: false }}
     >
-      <color attach="background" args={['#dfe9f4']} />
+      <color attach="background" args={['#e3edf6']} />
       <TyphoonScene
         point={p.point}
         setPoint={p.setPoint}
-        dragging={p.dragging}
-        setDragging={p.setDragging}
+        moveMode={p.moveMode}
+        exitMoveMode={p.exitMoveMode}
         showHeading={p.showHeading}
         showSemicircle={p.showSemicircle}
         showNames={p.showNames}
@@ -37,6 +38,7 @@ export default function Sim3DCanvas(p: Props) {
         reduced={p.reduced}
         lowPerf={p.lowPerf}
         view={p.view}
+        ab={p.ab}
       />
     </Canvas>
   );

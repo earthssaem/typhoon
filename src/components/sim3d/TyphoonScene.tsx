@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { SIM, bandIntensity, cloudHeight, weather3D } from '../../game/sim3dConfig';
+import {
+  SIM,
+  buildEyewallPuffs,
+  buildBandPuffs,
+  weather3D,
+  type Puff,
+} from '../../game/sim3dConfig';
 
 interface SceneProps {
   point: { x: number; z: number };
   setPoint: (p: { x: number; z: number }) => void;
-  setDragging: (b: boolean) => void;
-  dragging: boolean;
+  moveMode: boolean;
+  exitMoveMode: () => void;
   showHeading: boolean;
   showSemicircle: boolean;
   showNames: boolean;
@@ -16,60 +22,108 @@ interface SceneProps {
   reduced: boolean;
   lowPerf: boolean;
   view: 'top' | 'tilt';
+  ab: { a: { x: number; z: number }; b: { x: number; z: number } };
 }
 
-// 카메라 프리셋: 위에서 보기 / 비스듬히 보기
-function CameraRig({ view }: { view: 'top' | 'tilt' }) {
-  const { camera } = useThree();
-  useEffect(() => {
-    const target = view === 'top' ? new THREE.Vector3(0, 20, 0.01) : new THREE.Vector3(0, 12, 15);
-    camera.position.copy(target);
-    camera.lookAt(0, 0, 0);
-  }, [view, camera]);
-  return null;
+// 구름 덩어리(퍼프)를 InstancedMesh 한 번의 드로우콜로 그린다 — 성능 최적화
+function PuffCloud({
+  puffs,
+  color,
+  opacity = 1,
+  squash = 0.8,
+}: {
+  puffs: Puff[];
+  color: string;
+  opacity?: number;
+  squash?: number;
+}) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const pos = new THREE.Vector3();
+    const scl = new THREE.Vector3();
+    puffs.forEach((p, i) => {
+      pos.set(p.x, p.y, p.z);
+      scl.set(p.s, p.s * squash, p.s);
+      m.compose(pos, q, scl);
+      ref.current!.setMatrixAt(i, m);
+    });
+    ref.current!.instanceMatrix.needsUpdate = true;
+  }, [puffs, squash]);
+  return (
+    <instancedMesh ref={ref} args={[undefined as unknown as THREE.BufferGeometry, undefined as unknown as THREE.Material, puffs.length]}>
+      <sphereGeometry args={[1, 8, 8]} />
+      <meshStandardMaterial color={color} roughness={1} transparent={opacity < 1} opacity={opacity} />
+    </instancedMesh>
+  );
 }
 
-// 나선 비구름대 구름 퍼프 위치 미리 계산
-function useBandPuffs(lowPerf: boolean) {
-  return useMemo(() => {
-    const puffs: { x: number; z: number; h: number; s: number }[] = [];
-    const radial = lowPerf ? 26 : 46;
-    const ang = lowPerf ? 30 : 54;
-    for (let i = 0; i < radial; i++) {
-      const r = SIM.EYEWALL_R + (SIM.OUTER_R - SIM.EYEWALL_R) * (i / radial);
-      for (let j = 0; j < ang; j++) {
-        const a = (j / ang) * Math.PI * 2;
-        const x = Math.cos(a) * r;
-        const z = Math.sin(a) * r;
-        const b = bandIntensity(x, z);
-        if (b > 0.5) {
-          puffs.push({ x, z, h: cloudHeight(x, z), s: 0.35 + b * 0.5 });
-        }
-      }
-    }
-    return puffs;
-  }, [lowPerf]);
+// 라벨 + 가는 연결선(리더)
+function Label({ x, y, z, base, children, cls }: { x: number; y: number; z: number; base: number; children: React.ReactNode; cls?: string }) {
+  return (
+    <group>
+      <mesh position={[x, (y + base) / 2, z]}>
+        <cylinderGeometry args={[0.015, 0.015, y - base, 6]} />
+        <meshBasicMaterial color="#5a6b80" />
+      </mesh>
+      <Html position={[x, y, z]} center className={`r3-label ${cls ?? ''}`}>{children}</Html>
+    </group>
+  );
 }
 
 export function TyphoonScene(props: SceneProps) {
-  const { point, setPoint, setDragging, dragging, showHeading, showSemicircle, showNames, paused, reduced } = props;
+  const { point, setPoint, moveMode, exitMoveMode, showHeading, showSemicircle, showNames, paused, reduced, view, ab } = props;
+  const { camera } = useThree();
   const cloudGroup = useRef<THREE.Group>(null);
-  const puffs = useBandPuffs(props.lowPerf);
+  const controls = useRef<{ enabled: boolean; update: () => void } | null>(null);
+  const markerGroup = useRef<THREE.Group>(null);
+  const lineAttr = useRef<THREE.BufferAttribute>(null);
+  const disp = useRef(new THREE.Vector3(point.x, 0, point.z));
 
-  // 태풍 반시계 회전
-  useFrame((_, dt) => {
+  const eyewallPuffs = useMemo(() => buildEyewallPuffs(props.lowPerf), [props.lowPerf]);
+  const bandPuffs = useMemo(() => buildBandPuffs(props.lowPerf), [props.lowPerf]);
+
+  const w = weather3D(point.x, point.z);
+
+  // 카메라 부드러운 전환 애니메이션
+  const anim = useRef<{ from: THREE.Vector3; to: THREE.Vector3; t: number } | null>(null);
+  useEffect(() => {
+    const to = view === 'top' ? new THREE.Vector3(0, 24, 0.02) : new THREE.Vector3(0, 12, 14);
+    anim.current = { from: camera.position.clone(), to, t: 0 };
+  }, [view, camera]);
+
+  useFrame((_, dtRaw) => {
+    const dt = Math.min(dtRaw, 0.05);
+    // 태풍 반시계 회전
     if (cloudGroup.current && !paused) {
-      const sp = SIM.ROTATION_SPEED * (reduced ? 0.3 : 1);
-      cloudGroup.current.rotation.y += sp * dt; // +Y 회전(위에서 볼 때 반시계)
+      cloudGroup.current.rotation.y += SIM.ROTATION_SPEED * (reduced ? 0.3 : 1) * dt;
+    }
+    // 카메라 전환
+    if (anim.current) {
+      const a = anim.current;
+      a.t = Math.min(1, a.t + dt / 0.6);
+      const e = a.t < 0.5 ? 2 * a.t * a.t : 1 - Math.pow(-2 * a.t + 2, 2) / 2;
+      camera.position.lerpVectors(a.from, a.to, e);
+      camera.lookAt(0, 0, 0);
+      controls.current?.update();
+      if (a.t >= 1) anim.current = null;
+    }
+    // 관측 마커 부드러운 이동
+    disp.current.lerp(new THREE.Vector3(point.x, 0, point.z), Math.min(1, dt * 8));
+    if (markerGroup.current) markerGroup.current.position.set(disp.current.x, 0, disp.current.z);
+    if (lineAttr.current) {
+      const arr = lineAttr.current.array as Float32Array;
+      arr[3] = disp.current.x;
+      arr[5] = disp.current.z;
+      lineAttr.current.needsUpdate = true;
     }
   });
 
-  const w = weather3D(point.x, point.z);
-  const r = Math.hypot(point.x, point.z);
-
-  // 드래그: 지표 평면에서 포인터 위치 갱신
-  const onPlaneMove = (e: { point: THREE.Vector3; stopPropagation: () => void }) => {
-    if (!dragging) return;
+  // 지표 클릭 → 이동 모드일 때만 관측점 이동
+  const onGroundClick = (e: { point: THREE.Vector3; stopPropagation: () => void }) => {
+    if (!moveMode) return;
     e.stopPropagation();
     const maxR = SIM.OUTER_R + 1.5;
     let x = e.point.x;
@@ -80,146 +134,133 @@ export function TyphoonScene(props: SceneProps) {
       z = (z / d) * maxR;
     }
     setPoint({ x, z });
+    exitMoveMode();
   };
 
   return (
     <>
-      <CameraRig view={props.view} />
-      <ambientLight intensity={0.75} />
-      <directionalLight position={[6, 10, 4]} intensity={0.9} />
-      <directionalLight position={[-5, 6, -3]} intensity={0.3} />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[6, 12, 4]} intensity={0.95} />
+      <directionalLight position={[-5, 6, -3]} intensity={0.28} />
 
       <OrbitControls
-        enabled={!dragging}
+        ref={controls as never}
+        enabled={!moveMode}
         enablePan={false}
-        minPolarAngle={0.15}
-        maxPolarAngle={Math.PI / 2.25}
+        minPolarAngle={0.12}
+        maxPolarAngle={Math.PI / 2.2}
         minDistance={10}
-        maxDistance={26}
+        maxDistance={28}
         target={[0, 0, 0]}
       />
 
-      {/* 지표면 (바다/대지) — 드래그 캡처 평면 겸용 */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.02, 0]}
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          setDragging(true);
-          setPoint({ x: e.point.x, z: e.point.z });
-        }}
-        onPointerMove={onPlaneMove}
-        onPointerUp={() => setDragging(false)}
-        onPointerLeave={() => setDragging(false)}
-      >
+      {/* 지표면 — 차분한 중성색, 이동 모드일 때 클릭 캡처 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} onClick={onGroundClick}>
         <circleGeometry args={[SIM.OUTER_R + 2, 64]} />
-        <meshStandardMaterial color="#8fae8a" />
+        <meshStandardMaterial color="#b7c3cf" roughness={1} />
       </mesh>
 
       {/* 강풍반경 경계 링 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[SIM.OUTER_R - 0.06, SIM.OUTER_R, 64]} />
-        <meshBasicMaterial color="#f1c40f" transparent opacity={0.7} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#e0a92e" transparent opacity={0.6} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* 위험/가항 반원 오버레이 */}
+      {/* 위험/가항 반원 오버레이 (낮은 투명도) */}
       {showSemicircle && (
         <>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
             <circleGeometry args={[SIM.OUTER_R, 48, -Math.PI / 2, Math.PI]} />
-            <meshBasicMaterial color="#e74c3c" transparent opacity={0.16} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#e74c3c" transparent opacity={0.1} side={THREE.DoubleSide} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
             <circleGeometry args={[SIM.OUTER_R, 48, Math.PI / 2, Math.PI]} />
-            <meshBasicMaterial color="#3a7bd5" transparent opacity={0.16} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#3a7bd5" transparent opacity={0.1} side={THREE.DoubleSide} />
           </mesh>
           {showNames && (
             <>
-              <Html position={[SIM.OUTER_R * 0.6, 0.2, 0]} center className="r3-label danger-label">위험반원</Html>
-              <Html position={[-SIM.OUTER_R * 0.6, 0.2, 0]} center className="r3-label safe-label">가항반원</Html>
+              <Html position={[SIM.OUTER_R * 0.62, 0.15, 0]} center className="r3-label danger-label">위험반원</Html>
+              <Html position={[-SIM.OUTER_R * 0.62, 0.15, 0]} center className="r3-label safe-label">가항반원</Html>
             </>
           )}
         </>
       )}
 
-      {/* 진행 방향 화살표 (-Z = 북) */}
+      {/* 진행 방향 화살표 (-Z = 북) : 중심에서 전방으로 */}
       {showHeading && (
-        <group position={[0, 0.2, -(SIM.OUTER_R + 1.2)]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.5, 1.2, 16]} />
-            <meshStandardMaterial color="#1f2a3a" />
+        <group position={[0, 0.22, 0]}>
+          <mesh position={[0, 0, -(SIM.OUTER_R * 0.55)]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.09, 0.09, SIM.OUTER_R * 1.0, 12]} />
+            <meshStandardMaterial color="#2b3a4d" />
           </mesh>
-          {showNames && <Html position={[0, 0.6, -0.6]} center className="r3-label">진행 방향</Html>}
+          <mesh position={[0, 0, -(SIM.OUTER_R + 0.55)]} rotation={[-Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.42, 1.1, 16]} />
+            <meshStandardMaterial color="#2b3a4d" />
+          </mesh>
+          {showNames && <Html position={[0, 0.5, -(SIM.OUTER_R + 1.2)]} center className="r3-label">진행 방향</Html>}
         </group>
       )}
 
-      {/* 회전하는 구름 구조 */}
-      <group ref={cloudGroup}>
-        {/* 눈벽 (가장 높은 흰 고리) */}
-        <mesh position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[(SIM.EYE_R + SIM.EYEWALL_R) / 2, (SIM.EYEWALL_R - SIM.EYE_R) / 2, 16, 48]} />
-          <meshStandardMaterial color="#f5f8fc" roughness={0.9} />
-        </mesh>
-        {/* 나선 비구름대 퍼프 */}
-        {puffs.map((p, i) => (
-          <mesh key={i} position={[p.x, p.h * 0.5, p.z]}>
-            <sphereGeometry args={[p.s, 8, 8]} />
-            <meshStandardMaterial color="#e8eef6" transparent opacity={0.92} roughness={1} />
+      {/* A·B 비교 지점 (과제 3) */}
+      {[{ p: ab.a, c: '#e74c3c', t: 'A' }, { p: ab.b, c: '#3a7bd5', t: 'B' }].map((m) => (
+        <group key={m.t} position={[m.p.x, 0, m.p.z]}>
+          <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.42, 0.56, 24]} />
+            <meshBasicMaterial color={m.c} transparent opacity={0.85} side={THREE.DoubleSide} />
           </mesh>
-        ))}
-        {showNames && (
-          <>
-            <Html position={[0, 1.3, 0]} center className="r3-label">눈</Html>
-            <Html position={[SIM.EYEWALL_R + 0.2, 1.1, 0]} center className="r3-label">눈벽</Html>
-            <Html position={[SIM.OUTER_R * 0.6, 0.9, 0]} center className="r3-label">나선형 비구름대</Html>
-          </>
-        )}
+          <Html position={[0, 0.55, 0]} center className="r3-ab" style={{ background: m.c }}>{m.t}</Html>
+        </group>
+      ))}
+
+      {/* 회전하는 구름 구조: 눈벽(가장 높음) + 나선 비구름대(낮음) */}
+      <group ref={cloudGroup}>
+        <PuffCloud puffs={eyewallPuffs} color="#fbfdff" squash={0.95} />
+        <PuffCloud puffs={bandPuffs} color="#dde6f0" opacity={0.9} squash={0.7} />
       </group>
 
-      {/* 눈 안쪽 바닥(지표 노출) */}
+      {/* 눈 안쪽 바닥(지표 노출) + 중심 표시 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <circleGeometry args={[SIM.EYE_R, 32]} />
-        <meshStandardMaterial color="#9fc0d8" />
+        <meshStandardMaterial color="#9fb6cc" roughness={1} />
       </mesh>
+      <mesh position={[0, 0.35, 0]}>
+        <cylinderGeometry args={[0.04, 0.06, 0.7, 8]} />
+        <meshStandardMaterial color="#5a6b80" />
+      </mesh>
+
+      {/* 구조 라벨 (구조 이름 켤 때만) */}
+      {showNames && (
+        <>
+          <Label x={0} y={1.5} z={0} base={0.4} cls="">태풍의 눈</Label>
+          <Label x={SIM.EYEWALL_R + 0.5} y={2.35} z={0} base={1.9}>눈벽</Label>
+          <Label x={SIM.OUTER_R * 0.6} y={1.25} z={SIM.OUTER_R * 0.18} base={0.5}>나선형 비구름대</Label>
+        </>
+      )}
 
       {/* 중심-관측점 연결선 */}
       <line>
         <bufferGeometry>
           <bufferAttribute
+            ref={lineAttr as never}
             attach="attributes-position"
-            args={[new Float32Array([0, 0.05, 0, point.x, 0.05, point.z]), 3]}
+            args={[new Float32Array([0, 0.06, 0, point.x, 0.06, point.z]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#1d7fe0" />
       </line>
 
-      {/* 관측 지점 */}
-      <group position={[point.x, 0, point.z]}>
-        <mesh
-          position={[0, 0.5, 0]}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            setDragging(true);
-          }}
-          onPointerUp={() => setDragging(false)}
-        >
-          <coneGeometry args={[0.32, 1, 16]} />
-          <meshStandardMaterial color="#1d7fe0" emissive="#0a3a66" emissiveIntensity={0.3} />
+      {/* 관측 지점 (부드럽게 이동) */}
+      <group ref={markerGroup} position={[point.x, 0, point.z]}>
+        <mesh position={[0, 0.55, 0]}>
+          <coneGeometry args={[0.3, 1, 16]} />
+          <meshStandardMaterial color="#1d7fe0" emissive="#0a3a66" emissiveIntensity={0.35} />
         </mesh>
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.5, 0.62, 24]} />
-          <meshBasicMaterial color="#1d7fe0" transparent opacity={0.7} side={THREE.DoubleSide} />
+        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.48, 0.6, 24]} />
+          <meshBasicMaterial color="#1d7fe0" transparent opacity={0.75} side={THREE.DoubleSide} />
         </mesh>
-        {/* 국소 강수 입자 (강수 세기에 비례, 가벼움) */}
-        {w.precip > 0.6 &&
-          Array.from({ length: Math.min(10, Math.round(w.precip * 4)) }).map((_, i) => (
-            <mesh key={i} position={[(Math.random() - 0.5) * 0.9, 0.6 + Math.random() * 0.6, (Math.random() - 0.5) * 0.9]}>
-              <boxGeometry args={[0.03, 0.18, 0.03]} />
-              <meshBasicMaterial color="#7fb0e6" />
-            </mesh>
-          ))}
-        <Html position={[0, 1.2, 0]} center className="r3-point-tip">
-          {w.regionName} · {w.windSpeed}m/s {r > SIM.EYE_R ? `· ${w.semicircle}` : ''}
+        <Html position={[0, 1.25, 0]} center className="r3-point-tip">
+          {w.regionName} · {w.windSpeed}m/s
         </Html>
       </group>
     </>

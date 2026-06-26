@@ -1345,6 +1345,68 @@ body {
 .region-strongwind { background: #fef7e6; }
 .region-outside { background: #f1f5fb; }
 
+/* 관측 지점 이동 모드 */
+.sim3d-view.move-mode { cursor: crosshair; box-shadow: inset 0 0 0 3px #1d7fe0; }
+.move-banner {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  background: #1d7fe0; color: #fff; font-size: 13px; font-weight: 700;
+  padding: 8px 14px; border-radius: 999px; box-shadow: var(--shadow); z-index: 3; white-space: nowrap;
+}
+.r3-ab {
+  color: #fff; font-weight: 800; font-size: 13px; width: 20px; height: 20px; line-height: 20px;
+  text-align: center; border-radius: 50%; pointer-events: none;
+}
+
+/* 정보 패널: 거리 + 레벨 막대 */
+.readout-dist { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+.level-li { align-items: center; }
+.level-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.level-track { display: inline-flex; gap: 3px; }
+.level-seg { width: 12px; height: 8px; border-radius: 2px; }
+
+/* 조작 버튼 그룹 */
+.ctrl-group {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  background: #f7f9fc; border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px;
+}
+.ctrl-group-label { font-size: 11px; font-weight: 800; color: var(--muted); margin-right: 2px; }
+
+/* 위험/가항 벡터 설명 */
+.vector-toggle { margin-top: 10px; width: 100%; }
+.vector-panel { margin-top: 10px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.vector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vector-cell { background: #f7f9fc; border-radius: 8px; padding: 8px; text-align: center; }
+.vector-title { font-weight: 800; font-size: 13px; margin-bottom: 2px; }
+.vec-svg { width: 100%; height: auto; }
+.vec-tag { font-size: 8px; fill: #8a97a8; font-weight: 700; }
+.vec-note { font-size: 11px; color: var(--muted); margin: 4px 0 0; line-height: 1.5; }
+.move-slider { margin-top: 10px; }
+.move-slider label { font-size: 13px; }
+.move-slider input { width: 100%; margin-top: 4px; }
+
+/* 탐색 과제 카드 */
+.explore-head { margin-top: 20px; font-weight: 800; font-size: 15px; }
+.task-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+.task-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.task-card.doing { border-color: #f0c040; box-shadow: inset 0 0 0 1px #f0c040; }
+.task-card.done { border-color: var(--safe); background: #f1faf4; }
+.task-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.task-title { font-weight: 700; font-size: 13px; line-height: 1.4; }
+.task-status { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; white-space: nowrap; flex-shrink: 0; }
+.s-todo { background: #eef2f7; color: var(--muted); }
+.s-doing { background: #fff4d6; color: #9a7400; }
+.s-done { background: #daf3e3; color: var(--safe); }
+.task-guide { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0; }
+.task-find { font-size: 12px; color: #1f7a44; line-height: 1.6; margin: 0; font-weight: 600; }
+.hint-btn {
+  align-self: flex-start; background: none; border: none; color: var(--brand-d);
+  font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline;
+}
+.task-hint { font-size: 12px; color: #7a6a3a; background: #fcf6e3; border-radius: 8px; padding: 6px 8px; margin: 0; line-height: 1.5; }
+
 /* ───────── 인트로: 방 + TV 뉴스 속보 ───────── */
 .cinema-stage.room { height: 360px; padding: 0; transition: background 1.2s ease; }
 .room-bright { background: linear-gradient(180deg, #f4e9da, #efe2d0); }
@@ -1473,6 +1535,10 @@ body {
 @keyframes lean-big { 0%,100% { transform: translateX(-50%) scale(0.82) rotate(-3deg); } 50% { transform: translateX(-50%) scale(0.82) rotate(3deg); } }
 
 /* 반응형 */
+/* 태블릿: 정보 패널 폭을 줄이고 2열 유지 */
+@media (max-width: 1024px) and (min-width: 861px) {
+  .sim3d-grid { grid-template-columns: 1fr 280px; }
+}
 @media (max-width: 860px) {
   .sim-grid,
   .sim3d-grid,
@@ -1488,6 +1554,8 @@ body {
   .reveal-grid {
     grid-template-columns: 1fr;
   }
+  .task-cards { grid-template-columns: 1fr; }
+  .ctrl-group { width: 100%; }
   .scene {
     flex-direction: column;
   }

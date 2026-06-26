@@ -77,6 +77,64 @@ export function cloudHeight(x: number, z: number): number {
   return 0.18 + band * 0.55 * falloff;
 }
 
+// ── 구름 퍼프 빌더 (모식도 구름 덩어리) ───────────────────────────────────
+// 눈벽: 눈을 둘러싼 가장 높고 두꺼운 구름 벽 / 비구름대: 낮은 나선 띠
+export interface Puff {
+  x: number;
+  y: number;
+  z: number;
+  s: number;
+}
+
+// 결정적 의사난수(0~1) — 빌드마다 동일한 구름 모양 보장
+const hash = (n: number) => {
+  const s = Math.sin(n * 127.1) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+// 눈벽: 원형으로 구름 덩어리를 여러 층 쌓아 '벽'을 만든다(가장 높음).
+export function buildEyewallPuffs(lowPerf: boolean): Puff[] {
+  const puffs: Puff[] = [];
+  const ring = lowPerf ? 30 : 46;
+  const layers = lowPerf ? 3 : 4;
+  const rMid = (SIM.EYE_R + SIM.EYEWALL_R) / 2;
+  for (let i = 0; i < ring; i++) {
+    const a = (i / ring) * Math.PI * 2;
+    const baseR = rMid + (hash(i) - 0.5) * 0.5;
+    for (let k = 0; k < layers; k++) {
+      const t = k / (layers - 1);
+      const rr = baseR + t * 0.32; // 위로 갈수록 바깥쪽 → 안쪽 경사 급
+      const y = 0.25 + t * 1.55; // 전체 구조 중 가장 높음
+      const s = 0.62 - t * 0.16 + (hash(i * 7 + k) - 0.5) * 0.12;
+      puffs.push({ x: Math.cos(a) * rr, y, z: Math.sin(a) * rr, s });
+    }
+  }
+  return puffs;
+}
+
+// 나선형 비구름대: 띠 위에만 낮은 구름, 바깥으로 갈수록 옅고 낮아진다(띠 사이 빈 공간).
+export function buildBandPuffs(lowPerf: boolean): Puff[] {
+  const puffs: Puff[] = [];
+  const radial = lowPerf ? 22 : 40;
+  const ang = lowPerf ? 70 : 130;
+  for (let i = 0; i < radial; i++) {
+    const r = SIM.EYEWALL_R + 0.5 + (SIM.OUTER_R - SIM.EYEWALL_R) * (i / radial);
+    for (let j = 0; j < ang; j++) {
+      const a = (j / ang) * Math.PI * 2;
+      const x = Math.cos(a) * r;
+      const z = Math.sin(a) * r;
+      const b = bandIntensity(x, z);
+      if (b > 0.6) {
+        const falloff = clamp01((SIM.OUTER_R - r) / (SIM.OUTER_R - SIM.EYEWALL_R));
+        const y = 0.18 + b * 0.45 * falloff; // 눈벽보다 훨씬 낮음
+        const s = (0.32 + b * 0.4) * (0.7 + falloff * 0.5);
+        puffs.push({ x, y, z, s });
+      }
+    }
+  }
+  return puffs;
+}
+
 // 위치 판정
 export function regionOf(x: number, z: number): Region3D {
   const r = Math.hypot(x, z);
@@ -87,7 +145,9 @@ export function regionOf(x: number, z: number): Region3D {
 }
 
 // 핵심: 위치별 날씨 계산
-export function weather3D(x: number, z: number): Weather3D {
+// moveEffect: 태풍 이동속도에 의한 위험/가항 비대칭 강도(기본 = SIM.MOVE_EFFECT).
+// 교육용 슬라이더에서 비교값을 조절할 수 있도록 선택 인자로 노출(기존 호출부 영향 없음).
+export function weather3D(x: number, z: number, moveEffect: number = SIM.MOVE_EFFECT): Weather3D {
   const r = Math.hypot(x, z);
   const region = regionOf(x, z);
   const isRight = x > 0; // 진행 방향 오른쪽 = 위험반원
@@ -114,7 +174,7 @@ export function weather3D(x: number, z: number): Weather3D {
     wind = SIM.MAX_WIND * Math.pow(SIM.EYEWALL_R / r, 0.55);
   }
   // 위험/가항 비대칭 (이동속도 효과) — 눈 제외
-  if (region !== 'eye') wind *= 1 + (isRight ? SIM.MOVE_EFFECT : -SIM.MOVE_EFFECT);
+  if (region !== 'eye') wind *= 1 + (isRight ? moveEffect : -moveEffect);
   const windSpeed = Math.round(wind);
 
   // 강수
@@ -169,10 +229,32 @@ function describe(region: Region3D): string {
   }
 }
 
-// 같은 거리에서 위험/가항 풍속 비교
-export function compareSemicircle3D(distUnits: number): { right: number; left: number } {
+// 같은 거리에서 위험/가항 풍속 비교 (moveEffect로 비대칭 강도 조절 가능)
+export function compareSemicircle3D(
+  distUnits: number,
+  moveEffect: number = SIM.MOVE_EFFECT,
+): { right: number; left: number } {
   return {
-    right: weather3D(distUnits, 0).windSpeed,
-    left: weather3D(-distUnits, 0).windSpeed,
+    right: weather3D(distUnits, 0, moveEffect).windSpeed,
+    left: weather3D(-distUnits, 0, moveEffect).windSpeed,
   };
 }
+
+// 풍속 4단계 레벨(0~3) — 정보 패널 막대/라벨용
+export function windLevel(windSpeed: number): number {
+  if (windSpeed >= 40) return 3;
+  if (windSpeed >= 25) return 2;
+  if (windSpeed >= 14) return 1;
+  return 0;
+}
+export const WIND_LABELS = ['약함', '다소 강함', '강함', '매우 강함'];
+export const OUTDOOR_LABELS = ['가능', '주의', '어려움', '매우 위험'];
+
+// 강수 4단계 레벨(0~3)
+export function precipLevel(precip: number): number {
+  if (precip >= 2.5) return 3;
+  if (precip >= 1.4) return 2;
+  if (precip >= 0.6) return 1;
+  return 0;
+}
+export const PRECIP_LABELS = ['거의 없음', '약함', '강함', '매우 강함'];

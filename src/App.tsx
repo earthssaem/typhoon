@@ -79,7 +79,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        ⚠️ 프로토타입 — 일기도·위성·레이더·예상경로·관측값은 모두 교육용 테스트 <b>예시 데이터</b>입니다.
+        ⚠️ 현재 버전은 기능 확인을 위한 프로토타입이며, 화면에 표시된 기상자료는 <b>예시 자료</b>입니다.
       </footer>
     </div>
   );

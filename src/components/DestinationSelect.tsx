@@ -44,11 +44,6 @@ export function DestinationSelect({ go, patch, state }: StepProps) {
         </div>
       </div>
 
-      <p className="hint-small">
-        서울·부산·제주는 각각 별도의 앱이 아니라, 같은 게임 화면에서 선택한 목적지의 태풍 사례
-        데이터와 배경만 바뀝니다.
-      </p>
-
       <div className="actions">
         <button className="ghost-btn" onClick={() => go('sim')}>← 시뮬레이터로</button>
       </div>

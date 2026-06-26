@@ -1,29 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import type { StepProps } from '../App';
 
-// STEP 1. 문제 상황 — 시네마틱 인트로 (4장면)
-// 장면 1 준비물 등장 → 2 태풍 알림 → 3 핵심 문구 → 4 활동 목표 + 버튼
-// framer-motion 미설치 환경이므로 CSS 애니메이션 + 타이머로 구성한다.
+// STEP 1. 문제 상황 — 시네마틱 인트로
+// 방에서 TV를 보던 중 태풍 뉴스 속보가 뜨는 연출 (4장면)
+// 장면 0 방+TV(평온) → 1 뉴스 속보 → 2 핵심 문구 → 3 활동 목표 + 버튼
 
 const SEEN_KEY = 'typhoon-intro-seen-v1';
 
-// 준비물 (단순 아이콘)
-const SUPPLIES = [
-  { e: '🧳', n: '캐리어' },
-  { e: '👕', n: '옷' },
-  { e: '👟', n: '운동화' },
-  { e: '📷', n: '카메라' },
-  { e: '🍪', n: '간식' },
-  { e: '🧢', n: '모자' },
-];
+const SUPPLIES = ['🧳', '👕', '👟', '📷', '🍪', '🧢'];
 
-// 장면별 길이(ms). 재방문 시 빠르게 진행.
 function durations(fast: boolean, reduced: boolean) {
   const base = reduced ? 0.6 : 1;
   const k = (fast ? 0.45 : 1) * base;
   return {
-    s1: Math.round(2200 * k),
-    s2: Math.round(2600 * k),
+    s1: Math.round(2400 * k),
+    s2: Math.round(2800 * k),
     s3: Math.round(3000 * k),
   };
 }
@@ -39,7 +30,6 @@ export function Intro({ go }: StepProps) {
   const timers = useRef<number[]>([]);
   const audioCtx = useRef<AudioContext | null>(null);
 
-  // 타이머로 장면 자동 진행
   useEffect(() => {
     const d = durations(seen, !!reduced);
     const t: number[] = [];
@@ -60,9 +50,9 @@ export function Intro({ go }: StepProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 장면 2 진입 시 (소리 켜진 경우만) 알림음 재생
+  // 뉴스 속보(장면1) 진입 시 소리 켜져 있으면 알림음
   useEffect(() => {
-    if (scene === 2 && soundOn) playAlert();
+    if (scene === 1 && soundOn) playAlert();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene]);
 
@@ -72,17 +62,17 @@ export function Intro({ go }: StepProps) {
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const ctx = audioCtx.current;
       const now = ctx.currentTime;
-      [0, 0.18].forEach((off) => {
+      [0, 0.2].forEach((off) => {
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = 'sine';
         o.frequency.setValueAtTime(880, now + off);
         g.gain.setValueAtTime(0.0001, now + off);
         g.gain.exponentialRampToValueAtTime(0.18, now + off + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + off + 0.14);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + off + 0.16);
         o.connect(g).connect(ctx.destination);
         o.start(now + off);
-        o.stop(now + off + 0.16);
+        o.stop(now + off + 0.18);
       });
     } catch {
       /* 오디오 미지원 무시 */
@@ -92,7 +82,7 @@ export function Intro({ go }: StepProps) {
   const toggleSound = () => {
     const next = !soundOn;
     setSoundOn(next);
-    if (next) playAlert(); // 사용자가 켤 때 1회 확인음 (자동재생 아님)
+    if (next) playAlert();
   };
 
   const skip = () => {
@@ -105,11 +95,10 @@ export function Intro({ go }: StepProps) {
     setScene(3);
   };
 
-  const stormy = scene >= 1; // 장면2부터 흐려짐
+  const breaking = scene >= 1; // 속보부터
 
   return (
     <section className={`card intro intro-cinema fade-in${reduced ? ' reduced' : ''}`}>
-      {/* 상단 컨트롤 */}
       <div className="intro-controls">
         <button className="chip-btn" onClick={toggleSound} aria-pressed={soundOn}>
           {soundOn ? '🔊 소리 켜짐' : '🔈 소리 켜기'}
@@ -121,45 +110,69 @@ export function Intro({ go }: StepProps) {
         )}
       </div>
 
-      {/* 무대 */}
-      <div className={`cinema-stage sky-${stormy ? 'dim' : 'bright'}`}>
-        {/* 바람에 흔들리는 구름/소용돌이 (장면2~) */}
-        {scene >= 1 && (
-          <div className="cinema-clouds" aria-hidden>
-            <span className="cloud c1">☁️</span>
-            <span className="cloud c2">☁️</span>
-            <span className="swirl">🌀</span>
+      {/* 방 안 장면 */}
+      <div className={`cinema-stage room ${breaking ? 'room-dim' : 'room-bright'}`}>
+        {/* 벽 / 창문 / 바닥 */}
+        <div className="room-wall" aria-hidden>
+          <div className="room-window">
+            <div className={`win-sky ${breaking ? 'win-storm' : 'win-clear'}`}>
+              {!breaking ? <span className="win-sun">☀️</span> : <span className="win-swirl">🌀</span>}
+            </div>
           </div>
-        )}
+          <div className="room-poster">🗺️</div>
+        </div>
+        <div className="room-floor" aria-hidden />
 
-        {/* 장면 1: 준비물 등장 */}
-        <div className={`scene scene-supplies${scene === 0 ? ' on' : ' past'}`}>
-          <div className="supplies-row">
-            {SUPPLIES.map((s, i) => (
-              <span
-                key={s.n}
-                className={`supply${stormy ? ' sway' : ''}`}
-                style={{ animationDelay: `${i * 0.28}s` }}
-                title={s.n}
-              >
-                {s.e}
-              </span>
-            ))}
-          </div>
-          <h2 className="cinema-line">드디어 내일은 기다리던 수학여행!</h2>
+        {/* 흩어진 준비물 */}
+        <div className="room-supplies" aria-hidden>
+          {SUPPLIES.map((s, i) => (
+            <span key={i} className={`r-supply${breaking ? ' sway' : ''}`} style={{ animationDelay: `${i * 0.12}s` }}>
+              {s}
+            </span>
+          ))}
         </div>
 
-        {/* 장면 2: 태풍 알림 카드 */}
-        {scene >= 1 && (
-          <div className={`alert-card${scene === 1 ? ' drop' : scene > 1 ? ' settled' : ''}`}>
-            <div className="alert-head">📢 기상 속보</div>
-            <div className="alert-body">태풍이 한반도를 향해 북상 중입니다.</div>
+        {/* TV */}
+        <div className="tv-set">
+          <div className={`tv-screen${breaking ? ' breaking' : ''}`}>
+            {!breaking ? (
+              <div className="tv-weather">
+                <div className="tvw-row"><span>📍 전국</span><span>내일 날씨</span></div>
+                <div className="tvw-icons"><span>☀️</span><span>⛅</span><span>☀️</span></div>
+                <div className="tvw-caption">나들이 좋은 날씨</div>
+              </div>
+            ) : (
+              <div className="tv-news">
+                <div className="news-top">
+                  <span className="news-live">● LIVE</span>
+                  <span className="news-badge">속보</span>
+                </div>
+                <div className="news-anchor">🧑‍💼📡</div>
+                <div className="news-head">태풍이 한반도를 향해 북상 중입니다.</div>
+                <div className="news-ticker"><span>기상청 태풍경보 · 전국 대부분 지역 영향 가능성 · 외출 시 주의 · </span></div>
+              </div>
+            )}
           </div>
-        )}
+          <div className="tv-stand" />
+        </div>
 
-        {/* 장면 3: 핵심 문구 */}
+        {/* TV 보는 학생 (뒷모습) */}
+        <div className={`viewer${breaking ? ' shock' : ''}`} aria-hidden>
+          <svg viewBox="0 0 80 90" width="80" height="90">
+            <ellipse cx="40" cy="86" rx="26" ry="5" fill="#00000022" />
+            <rect x="20" y="44" width="40" height="40" rx="14" fill="#5b6b86" />
+            <circle cx="40" cy="30" r="16" fill="#3a2b22" />
+            <circle cx="40" cy="33" r="13" fill="#2a1f19" />
+          </svg>
+          {breaking && <span className="shock-mark">❗</span>}
+        </div>
+
+        {/* 장면 0 자막 */}
+        {scene === 0 && <div className="room-caption">드디어 내일은 기다리던 수학여행!</div>}
+
+        {/* 장면 2 핵심 문구 */}
         {scene >= 2 && (
-          <div className={`punch${scene === 2 ? ' on' : ' past'}`}>
+          <div className="punch room-punch">
             <div className="punch-1">잠깐……</div>
             <div className="punch-2">내일 수학여행인데</div>
             <div className="punch-3">태풍이 올라온대!!</div>
@@ -167,7 +180,7 @@ export function Intro({ go }: StepProps) {
         )}
       </div>
 
-      {/* 장면 4: 활동 목표 + 버튼 */}
+      {/* 장면 3 활동 목표 + 버튼 */}
       {scene >= 3 && (
         <div className="cinema-goal fade-in">
           <h1>내일이 수학여행인데…… 태풍이 올라온대!!</h1>

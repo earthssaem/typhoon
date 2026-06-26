@@ -18,7 +18,12 @@ interface Props {
 
 export default function Sim3DCanvas(p: Props) {
   return (
-    <Canvas camera={{ position: [0, 12, 15], fov: 45 }} dpr={p.lowPerf ? 1 : [1, 2]}>
+    <Canvas
+      camera={{ position: [0, 12, 15], fov: 45 }}
+      dpr={p.lowPerf ? 1 : [1, 2]}
+      style={{ position: 'absolute', inset: 0 }}
+      resize={{ scroll: false }}
+    >
       <color attach="background" args={['#dfe9f4']} />
       <TyphoonScene
         point={p.point}

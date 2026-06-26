@@ -83,31 +83,33 @@ export function Simulator({ go, patch }: StepProps) {
       <div className="sim3d-grid">
         {/* 중앙: 3D 캔버스 */}
         <div className="sim3d-canvas">
-          {hasWebGL ? (
-            <Suspense fallback={<div className="webgl-fallback"><p>3D 태풍을 불러오는 중…</p></div>}>
-              <Sim3DCanvas
-                point={point}
-                setPoint={updatePoint}
-                dragging={dragging}
-                setDragging={setDragging}
-                showHeading={showHeading}
-                showSemicircle={showSemicircle}
-                showNames={showNames}
-                paused={paused}
-                reduced={!!reduced}
-                lowPerf={lowPerf}
-                view={view}
-              />
-            </Suspense>
-          ) : (
-            <div className="webgl-fallback">
-              <p>이 기기에서는 3D 보기를 사용할 수 없습니다(WebGL 미지원).</p>
-              <p className="hint-small">아래 정보 패널의 값과 탐색 과제는 그대로 이용할 수 있습니다.</p>
+          <div className="sim3d-view">
+            {hasWebGL ? (
+              <Suspense fallback={<div className="webgl-fallback"><p>3D 태풍을 불러오는 중…</p></div>}>
+                <Sim3DCanvas
+                  point={point}
+                  setPoint={updatePoint}
+                  dragging={dragging}
+                  setDragging={setDragging}
+                  showHeading={showHeading}
+                  showSemicircle={showSemicircle}
+                  showNames={showNames}
+                  paused={paused}
+                  reduced={!!reduced}
+                  lowPerf={lowPerf}
+                  view={view}
+                />
+              </Suspense>
+            ) : (
+              <div className="webgl-fallback">
+                <p>이 기기에서는 3D 보기를 사용할 수 없습니다(WebGL 미지원).</p>
+                <p className="hint-small">아래 정보 패널의 값과 탐색 과제는 그대로 이용할 수 있습니다.</p>
+              </div>
+            )}
+            <div className="cam-buttons">
+              <button className={`chip-btn${view === 'tilt' ? ' on' : ''}`} onClick={() => setView('tilt')}>비스듬히 보기</button>
+              <button className={`chip-btn${view === 'top' ? ' on' : ''}`} onClick={() => setView('top')}>위에서 보기</button>
             </div>
-          )}
-          <div className="cam-buttons">
-            <button className={`chip-btn${view === 'tilt' ? ' on' : ''}`} onClick={() => setView('tilt')}>비스듬히 보기</button>
-            <button className={`chip-btn${view === 'top' ? ' on' : ''}`} onClick={() => setView('top')}>위에서 보기</button>
           </div>
           <div className="sim3d-hint">🖐️ 관측점 드래그 = 위치 이동 · 빈 곳 드래그 = 시점 회전</div>
         </div>

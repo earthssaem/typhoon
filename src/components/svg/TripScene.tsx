@@ -89,7 +89,7 @@ function Backdrop({ d }: { d: DestinationId }) {
   );
 }
 
-export function TripScene({ result }: { result: EndingResult }) {
+export function TripScene({ result, big = false }: { result: EndingResult; big?: boolean }) {
   const a = result.actualWeather;
   const hasUmbrella = result.selectedItems.includes('umbrella');
   const hasRaincoat = result.selectedItems.includes('raincoat') || result.selectedItems.includes('rainJacket');
@@ -99,7 +99,7 @@ export function TripScene({ result }: { result: EndingResult }) {
   const mood = a.rainy || a.windy ? 'storm' : a.hot ? 'sunny' : 'cloudy';
 
   return (
-    <div className={`trip-scene mood-${mood}${result.actualWeather.windy ? ' windy' : ''}`}>
+    <div className={`trip-scene mood-${mood}${result.actualWeather.windy ? ' windy' : ''}${big ? ' big' : ''}`}>
       <Backdrop d={result.destination} />
 
       {/* 비 */}

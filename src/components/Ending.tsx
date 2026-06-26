@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { StepProps } from '../App';
 import { CASES } from '../data/cases';
 import { ForecastTrackMap } from './svg/ForecastTrackMap';
-import { GroupPhoto } from './svg/GroupPhoto';
 import { TripScene } from './svg/TripScene';
-import { itemById } from '../data/items';
 import { evaluateEnding } from '../game/ending';
 
 // STEP 8. 실제 수학여행 엔딩 — 5장면 시퀀스
@@ -83,33 +81,13 @@ export function Ending({ go, state, reset }: StepProps) {
         </div>
       </div>
 
-      {/* ② 캐리어 열기 */}
+      {/* ② 실제 날씨 속 수학여행 (애니메이션) */}
       <div className="reveal">
-        <h3>② 캐리어 열기 — 내가 챙긴 것만 사용</h3>
-        <div className="open-carrier">
-          {r.selectedItems.length === 0 && <span className="hint-small">담은 물품이 없어요.</span>}
-          {r.selectedItems.map((id, i) => {
-            const it = itemById(id)!;
-            const needed = r.itemMatches.some((m) => m.id === id);
-            return (
-              <span
-                key={id}
-                className={`oc-item${needed ? ' needed' : ''}`}
-                style={{ animationDelay: `${reduced ? 0 : i * 0.12}s` }}
-                title={needed ? '실제 날씨에 도움이 된 물품' : undefined}
-              >
-                {it.emoji}<small>{it.name}</small>
-                {needed && <i className="oc-star">⭐</i>}
-              </span>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ③ 실제 날씨 속 여행 */}
-      <div className="reveal">
-        <h3>③ 실제 날씨 속 수학여행</h3>
-        <TripScene result={r} />
+        <h3>② 실제 날씨 속 수학여행 — {r.cityName}</h3>
+        <TripScene result={r} big />
+        <p className="photo-cap">
+          {r.cityName} 수학여행 도착! · 실제 기온 {a.temp}℃ · {a.rainy ? '비' : '대체로 흐림'} · {a.windy ? '강한 바람' : '약한 바람'}
+        </p>
         <div className="comfort">
           쾌적도 <b>{r.dress.comfort}</b> / 100 <span className="comfort-label">({comfortLabel})</span>
           <div className="comfort-bar"><div style={{ width: `${r.dress.comfort}%` }} /></div>
@@ -119,21 +97,7 @@ export function Ending({ go, state, reset }: StepProps) {
         </ul>
       </div>
 
-      {/* ④ 기념사진 */}
-      <div className="reveal">
-        <h3>④ 단체 기념사진</h3>
-        <GroupPhoto
-          mode="ending"
-          mood={a.rainy || a.windy ? 'storm' : a.hot ? 'sunny' : 'cloudy'}
-          comfort={r.dress.comfort}
-          headline={r.overallResult.headline}
-        />
-        <p className="photo-cap">
-          {r.cityName} 수학여행 도착! · 실제 기온 {a.temp}℃ · {a.rainy ? '비' : '대체로 흐림'} · {a.windy ? '강한 바람' : '약한 바람'}
-        </p>
-      </div>
-
-      {/* ⑤ 결과 요약 (날씨/일정/준비물) */}
+      {/* ③ 결과 요약 (날씨/일정/준비물) */}
       <div className="score-box">
         <div className="grade-badge">{r.overallResult.grade}</div>
         <div className="score-total">{r.overallResult.total} / {r.overallResult.max}점</div>

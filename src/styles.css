@@ -1309,19 +1309,23 @@ body {
 
 /* ───────── 3D 시뮬레이터 ───────── */
 .sim3d-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
-.sim3d-canvas { position: relative; }
-.sim3d-canvas > div:first-child,
-.sim3d-canvas canvas {
+.sim3d-canvas { min-width: 0; }
+.sim3d-view {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 0.92;
   border-radius: 12px;
+  overflow: hidden;
+  background: #dfe9f4;
   touch-action: none;
 }
+.sim3d-view canvas { display: block; }
 .webgl-fallback {
+  position: absolute; inset: 0;
   display: grid; place-content: center; text-align: center; gap: 6px;
   background: #eef3f8; border: 1px dashed var(--line); padding: 24px;
 }
-.cam-buttons { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; }
+.cam-buttons { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 2; }
 .sim3d-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .sim3d-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .wind-arrow { display: inline-block; font-weight: 800; color: var(--brand-d); }
@@ -1341,6 +1345,108 @@ body {
 .region-strongwind { background: #fef7e6; }
 .region-outside { background: #f1f5fb; }
 
+/* ───────── 인트로: 방 + TV 뉴스 속보 ───────── */
+.cinema-stage.room { height: 360px; padding: 0; transition: background 1.2s ease; }
+.room-bright { background: linear-gradient(180deg, #f4e9da, #efe2d0); }
+.room-dim { background: linear-gradient(180deg, #cbb9c6, #b6a7b8); filter: brightness(0.95); }
+.room-wall { position: absolute; inset: 0 0 32% 0; }
+.room-window {
+  position: absolute; top: 26px; left: 28px; width: 96px; height: 84px;
+  border: 6px solid #cdb89a; border-radius: 6px; overflow: hidden; background: #fff;
+}
+.win-sky { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; transition: background 1s; }
+.win-clear { background: linear-gradient(180deg, #bfe3ff, #eaf6ff); }
+.win-storm { background: linear-gradient(180deg, #7d8aa3, #aab6c6); }
+.win-swirl { animation: swirl-spin 4s linear infinite; }
+.room-poster { position: absolute; top: 30px; right: 34px; font-size: 38px; opacity: 0.7; }
+.room-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 32%; background: linear-gradient(180deg, #d9b98f, #c9a878); }
+
+.room-supplies { position: absolute; bottom: 10px; left: 14px; display: flex; gap: 10px; z-index: 2; }
+.r-supply { font-size: 26px; }
+.r-supply.sway { animation: sway 1.4s ease-in-out infinite; transform-origin: bottom center; }
+
+.tv-set { position: absolute; right: 40px; bottom: 30%; z-index: 2; }
+.tv-screen {
+  width: 190px; height: 124px; border-radius: 10px; background: #10151d;
+  border: 7px solid #2b2b30; box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  overflow: hidden; position: relative;
+}
+.tv-screen.breaking { border-color: #1a1a1f; animation: tv-flicker 0.5s 2; }
+@keyframes tv-flicker { 0%,100% { filter: none; } 50% { filter: brightness(1.5); } }
+.tv-stand { width: 60px; height: 14px; margin: 4px auto 0; background: #2b2b30; border-radius: 0 0 8px 8px; }
+.tv-weather { position: absolute; inset: 0; background: linear-gradient(180deg, #1f6fb0, #2a8ad0); color: #fff; padding: 8px 10px; }
+.tvw-row { display: flex; justify-content: space-between; font-size: 10px; opacity: 0.9; }
+.tvw-icons { display: flex; gap: 10px; justify-content: center; font-size: 26px; margin: 8px 0 4px; }
+.tvw-caption { text-align: center; font-size: 12px; font-weight: 700; }
+.tv-news { position: absolute; inset: 0; background: #0d1626; color: #fff; }
+.news-top { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: #c0152b; }
+.news-live { font-size: 9px; font-weight: 800; color: #fff; }
+.news-badge { font-size: 11px; font-weight: 900; background: #fff; color: #c0152b; padding: 1px 8px; border-radius: 4px; letter-spacing: 2px; }
+.news-anchor { text-align: center; font-size: 30px; margin: 8px 0 2px; }
+.news-head { font-size: 11px; font-weight: 700; text-align: center; padding: 0 8px; line-height: 1.35; }
+.news-ticker { position: absolute; bottom: 0; left: 0; right: 0; background: #08203a; overflow: hidden; white-space: nowrap; }
+.news-ticker span { display: inline-block; padding: 3px 0; font-size: 10px; color: #ffd34e; animation: ticker 9s linear infinite; }
+@keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+.viewer { position: absolute; bottom: 8px; right: 70px; z-index: 1; }
+.viewer.shock { animation: shiver 0.2s 6; }
+.shock-mark { position: absolute; top: -8px; left: 50%; font-size: 22px; color: var(--danger); animation: pop-to 0.4s both; }
+.room-caption {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  background: #ffffffd8; padding: 8px 18px; border-radius: 999px; font-weight: 800; font-size: 17px;
+  z-index: 3; box-shadow: var(--shadow);
+}
+.room-punch {
+  position: absolute; inset: 0; display: grid; place-content: center; z-index: 4;
+  background: radial-gradient(circle, #00000022, #00000055);
+}
+
+/* ───────── 캐리어: 펼친 여행가방 ───────── */
+.pack-layout { display: grid; grid-template-columns: 220px 1fr 300px; gap: 16px; align-items: start; }
+.mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 12px; }
+.mannequin-head { font-size: 13px; font-weight: 700; color: #8a6d9b; margin-bottom: 6px; text-align: center; }
+.mannequin { display: grid; place-items: center; }
+.suitcase-box { min-width: 0; }
+.suitcase {
+  display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px;
+  background: #355a7a; border-radius: 16px; padding: 12px;
+  box-shadow: inset 0 0 0 3px #2a4861, var(--shadow);
+}
+.suitcase.full { box-shadow: inset 0 0 0 3px var(--danger), var(--shadow); }
+.sc-lid {
+  background: #2f5170; border-radius: 10px; padding: 10px; position: relative;
+  display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;
+}
+.sc-sticker {
+  align-self: flex-start; background: #ffd34e; color: #5a4a10; font-weight: 800; font-size: 12px;
+  padding: 4px 10px; border-radius: 6px; transform: rotate(-6deg);
+}
+.sc-mesh { display: grid; gap: 12px; opacity: 0.5; }
+.sc-mesh span { height: 0; border-top: 2px dashed #9fc0dd; }
+.sc-base {
+  background: #2f5170; border-radius: 10px; padding: 10px; position: relative;
+}
+.sc-handle { width: 70px; height: 8px; background: #213b52; border-radius: 6px; margin: 0 auto 10px; }
+.suitcase-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.sc-cell {
+  aspect-ratio: 1; border-radius: 8px; background: #3c648a; border: 1px dashed #5b87aa;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px;
+}
+.sc-cell small { font-size: 8px; color: #d7e6f2; margin-top: 2px; line-height: 1; }
+.sc-cell.occupied { background: #eaf2ff; border: 1px solid #fff; cursor: pointer; color: var(--ink); }
+.sc-cell.occupied small { color: var(--muted); }
+.sc-cell.occupied.span { background: #d3e4fb; }
+.sc-cell.occupied:hover { box-shadow: 0 0 0 2px #ffffff88; }
+.sc-emoji { font-size: 22px; }
+.suitcase-box .capacity-bar { margin: 10px 0 4px; }
+.sc-count { text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
+
+/* 여행 장면 큰 버전 */
+.trip-scene.big { height: 320px; }
+.trip-scene.big .trip-char { transform: translateX(-50%) scale(0.82); }
+.trip-scene.big .trip-char.lean { animation: lean-big 1.6s ease-in-out infinite; }
+@keyframes lean-big { 0%,100% { transform: translateX(-50%) scale(0.82) rotate(-3deg); } 50% { transform: translateX(-50%) scale(0.82) rotate(3deg); } }
+
 /* 반응형 */
 @media (max-width: 860px) {
   .sim-grid,
@@ -1352,6 +1458,7 @@ body {
   .evidence-grid,
   .carrier-layout,
   .boutique-layout,
+  .pack-layout,
   .result-sections,
   .reveal-grid {
     grid-template-columns: 1fr;

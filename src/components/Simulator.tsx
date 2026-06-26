@@ -15,9 +15,6 @@ import {
 // three.js 번들 지연 로딩 (다른 화면 초기 로딩을 가볍게)
 const Sim3DCanvas = lazy(() => import('./sim3d/Sim3DCanvas'));
 
-// A·B 비교 지점 (같은 거리, 진행 방향 오른쪽/왼쪽)
-const AB = { a: { x: 5, z: 0 }, b: { x: -5, z: 0 } };
-
 // WebGL 지원 여부 (없으면 2D 안내로 폴백)
 function webglOK(): boolean {
   try {
@@ -115,7 +112,6 @@ export function Simulator({ go, patch }: StepProps) {
   const [showSemicircle, setShowSemicircle] = useState(true);
   const [showNames, setShowNames] = useState(true);
   const [view, setView] = useState<'top' | 'tilt'>('tilt');
-  const [moveMode, setMoveMode] = useState(false);
   const [vectorOpen, setVectorOpen] = useState(false);
   const [moveSpeed, setMoveSpeed] = useState(0.5);
   const [hints, setHints] = useState({ 1: false, 2: false, 3: false });
@@ -123,8 +119,8 @@ export function Simulator({ go, patch }: StepProps) {
   // 탐색 과제 추적
   const visitedEye = useRef(false);
   const visitedEyewall = useRef(false);
-  const nearA = useRef(false);
-  const nearB = useRef(false);
+  const visitedDanger = useRef(false); // 위험반원(오른쪽 절반) 방문
+  const visitedNavigable = useRef(false); // 가항반원(왼쪽 절반) 방문
   const vectorRef = useRef(false);
   const [tasks, setTasks] = useState({ t1: false, t2: false, t3: false });
 
@@ -137,7 +133,7 @@ export function Simulator({ go, patch }: StepProps) {
     setTasks({
       t1: visitedEyewall.current,
       t2: visitedEye.current,
-      t3: nearA.current && nearB.current && vectorRef.current,
+      t3: visitedDanger.current && visitedNavigable.current && vectorRef.current,
     });
   };
 
@@ -146,8 +142,11 @@ export function Simulator({ go, patch }: StepProps) {
     const ww = weather3D(p.x, p.z);
     if (ww.region === 'eyewall') visitedEyewall.current = true;
     if (ww.region === 'eye') visitedEye.current = true;
-    if (Math.hypot(p.x - AB.a.x, p.z - AB.a.z) < 1.4) nearA.current = true;
-    if (Math.hypot(p.x - AB.b.x, p.z - AB.b.z) < 1.4) nearB.current = true;
+    // 위험/가항반원은 태풍을 좌우로 나눈 '넓은 절반' — 눈 밖이면 어느 절반인지 기록
+    if (ww.region !== 'eye' && ww.region !== 'outside') {
+      if (ww.semicircle === '위험반원') visitedDanger.current = true;
+      if (ww.semicircle === '가항반원') visitedNavigable.current = true;
+    }
     evalTasks();
   };
 
@@ -173,8 +172,8 @@ export function Simulator({ go, patch }: StepProps) {
     setTasks({ t1: false, t2: false, t3: false });
     visitedEye.current = false;
     visitedEyewall.current = false;
-    nearA.current = false;
-    nearB.current = false;
+    visitedDanger.current = false;
+    visitedNavigable.current = false;
   };
 
   // 레벨 계산
@@ -185,28 +184,26 @@ export function Simulator({ go, patch }: StepProps) {
   const status = (done: boolean, doing: boolean) => (done ? 'done' : doing ? 'doing' : 'todo');
   const card1 = status(tasks.t1, ['eye', 'eyewall', 'band', 'strongwind'].includes(w.region));
   const card2 = status(tasks.t2, w.region === 'eyewall' || w.region === 'eye');
-  const card3 = status(tasks.t3, nearA.current || nearB.current || vectorOpen);
+  const card3 = status(tasks.t3, visitedDanger.current || visitedNavigable.current || vectorOpen);
   const STAT_LABEL: Record<string, string> = { todo: '시작 전', doing: '탐색 중', done: '완료' };
 
   return (
     <section className="card sim fade-in">
       <h2>STEP 2 · 태풍 구조 입체 시뮬레이터</h2>
       <p className="q">
-        태풍 중심으로부터 <b>어느 위치에 있느냐</b>에 따라 날씨는 어떻게 달라질까요? 화면을 돌려 구조와
-        높이를 살펴보고, <b>‘관측 지점 이동’</b>으로 지표면을 클릭해 위치별 날씨를 확인해 보세요.
+        태풍 중심으로부터 <b>어느 위치에 있느냐</b>에 따라 날씨는 어떻게 달라질까요? 화면을 끌어 태풍을
+        돌려 보고, <b>지표면을 클릭</b>하면 관측 지점(🔵)이 그 자리로 이동해 위치별 날씨를 보여줍니다.
       </p>
 
       <div className="sim3d-grid">
         {/* 왼쪽: 3D 캔버스 */}
         <div className="sim3d-canvas">
-          <div className={`sim3d-view${moveMode ? ' move-mode' : ''}`}>
+          <div className="sim3d-view">
             {hasWebGL ? (
               <Suspense fallback={<div className="webgl-fallback"><p>3D 태풍을 불러오는 중…</p></div>}>
                 <Sim3DCanvas
                   point={point}
                   setPoint={updatePoint}
-                  moveMode={moveMode}
-                  exitMoveMode={() => setMoveMode(false)}
                   showHeading={showHeading}
                   showSemicircle={showSemicircle}
                   showNames={showNames}
@@ -214,7 +211,6 @@ export function Simulator({ go, patch }: StepProps) {
                   reduced={!!reduced}
                   lowPerf={lowPerf}
                   view={view}
-                  ab={AB}
                 />
               </Suspense>
             ) : (
@@ -223,12 +219,9 @@ export function Simulator({ go, patch }: StepProps) {
                 <p className="hint-small">아래 정보 패널의 값과 탐색 과제는 그대로 이용할 수 있습니다.</p>
               </div>
             )}
-            {moveMode && (
-              <div className="move-banner">📍 지표면에서 날씨를 확인하고 싶은 위치를 클릭하세요.</div>
-            )}
           </div>
           <div className="sim3d-hint">
-            🖐️ 화면 드래그: 태풍 회전 · 🖱️ 휠: 확대/축소 · 📍 관측 지점은 ‘관측 지점 이동’ 후 지표면 클릭
+            🖐️ 화면 드래그: 태풍 회전 · 🖱️ 휠: 확대/축소 · 👆 지표면 클릭: 관측 지점 이동
           </div>
         </div>
 
@@ -305,7 +298,6 @@ export function Simulator({ go, patch }: StepProps) {
         </div>
         <div className="ctrl-group">
           <span className="ctrl-group-label">관찰</span>
-          <button className={`chip-btn${moveMode ? ' on' : ''}`} onClick={() => setMoveMode((v) => !v)}>📍 관측 지점 이동</button>
           <button className="chip-btn" onClick={() => setPaused((p) => !p)}>{paused ? '▶ 회전 재생' : '⏸ 회전 정지'}</button>
           <button className="chip-btn" onClick={reset}>초기화</button>
         </div>
@@ -344,9 +336,9 @@ export function Simulator({ go, patch }: StepProps) {
             st: card3,
             done: tasks.t3,
             title: '③ 같은 거리인데 왜 바람이 다를까?',
-            guide: '위험반원의 A 지점과 같은 거리의 가항반원 B 지점을 모두 방문하고, ‘바람이 다른 이유 보기’를 열어 보세요.',
+            guide: '태풍을 좌우로 나눈 두 절반 — 위험반원(오른쪽)과 가항반원(왼쪽)을 각각 한 번씩 찍어 보고, ‘바람이 다른 이유 보기’를 열어 보세요.',
             find: '같은 거리에서도 위험반원은 태풍의 회전 바람과 이동 효과가 더해져 가항반원보다 바람이 강합니다.',
-            hint: '진행 방향 화살표를 기준으로 오른쪽(A)과 왼쪽(B)을 비교해 보세요.',
+            hint: '진행 방향 화살표(북쪽) 기준으로 오른쪽 절반과 왼쪽 절반을 각각 클릭해 보세요.',
           },
         ].map((c) => (
           <div key={c.n} className={`task-card ${c.st}`}>

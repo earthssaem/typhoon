@@ -13,8 +13,6 @@ import {
 interface SceneProps {
   point: { x: number; z: number };
   setPoint: (p: { x: number; z: number }) => void;
-  moveMode: boolean;
-  exitMoveMode: () => void;
   showHeading: boolean;
   showSemicircle: boolean;
   showNames: boolean;
@@ -22,7 +20,6 @@ interface SceneProps {
   reduced: boolean;
   lowPerf: boolean;
   view: 'top' | 'tilt';
-  ab: { a: { x: number; z: number }; b: { x: number; z: number } };
 }
 
 // 구름 덩어리(퍼프)를 InstancedMesh 한 번의 드로우콜로 그린다 — 성능 최적화
@@ -74,7 +71,7 @@ function Label({ x, y, z, base, children, cls }: { x: number; y: number; z: numb
 }
 
 export function TyphoonScene(props: SceneProps) {
-  const { point, setPoint, moveMode, exitMoveMode, showHeading, showSemicircle, showNames, paused, reduced, view, ab } = props;
+  const { point, setPoint, showHeading, showSemicircle, showNames, paused, reduced, view } = props;
   const { camera } = useThree();
   const cloudGroup = useRef<THREE.Group>(null);
   const controls = useRef<{ enabled: boolean; update: () => void } | null>(null);
@@ -121,9 +118,8 @@ export function TyphoonScene(props: SceneProps) {
     }
   });
 
-  // 지표 클릭 → 이동 모드일 때만 관측점 이동
+  // 지표 클릭 → 관측점 이동 (드래그=회전과 충돌 없음: r3f onClick은 클릭에만 발생)
   const onGroundClick = (e: { point: THREE.Vector3; stopPropagation: () => void }) => {
-    if (!moveMode) return;
     e.stopPropagation();
     const maxR = SIM.OUTER_R + 1.5;
     let x = e.point.x;
@@ -134,7 +130,6 @@ export function TyphoonScene(props: SceneProps) {
       z = (z / d) * maxR;
     }
     setPoint({ x, z });
-    exitMoveMode();
   };
 
   return (
@@ -145,7 +140,6 @@ export function TyphoonScene(props: SceneProps) {
 
       <OrbitControls
         ref={controls as never}
-        enabled={!moveMode}
         enablePan={false}
         minPolarAngle={0.12}
         maxPolarAngle={Math.PI / 2.2}
@@ -171,11 +165,11 @@ export function TyphoonScene(props: SceneProps) {
         <>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
             <circleGeometry args={[SIM.OUTER_R, 48, -Math.PI / 2, Math.PI]} />
-            <meshBasicMaterial color="#e74c3c" transparent opacity={0.1} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#e74c3c" transparent opacity={0.15} side={THREE.DoubleSide} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
             <circleGeometry args={[SIM.OUTER_R, 48, Math.PI / 2, Math.PI]} />
-            <meshBasicMaterial color="#3a7bd5" transparent opacity={0.1} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#3a7bd5" transparent opacity={0.15} side={THREE.DoubleSide} />
           </mesh>
           {showNames && (
             <>
@@ -200,17 +194,6 @@ export function TyphoonScene(props: SceneProps) {
           {showNames && <Html position={[0, 0.5, -(SIM.OUTER_R + 1.2)]} center className="r3-label">진행 방향</Html>}
         </group>
       )}
-
-      {/* A·B 비교 지점 (과제 3) */}
-      {[{ p: ab.a, c: '#e74c3c', t: 'A' }, { p: ab.b, c: '#3a7bd5', t: 'B' }].map((m) => (
-        <group key={m.t} position={[m.p.x, 0, m.p.z]}>
-          <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.42, 0.56, 24]} />
-            <meshBasicMaterial color={m.c} transparent opacity={0.85} side={THREE.DoubleSide} />
-          </mesh>
-          <Html position={[0, 0.55, 0]} center className="r3-ab" style={{ background: m.c }}>{m.t}</Html>
-        </group>
-      ))}
 
       {/* 회전하는 구름 구조: 눈벽(가장 높음) + 나선 비구름대(낮음) */}
       <group ref={cloudGroup}>

@@ -1470,12 +1470,12 @@ body {
   padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted);
 }
 .pack-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
-.pack-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 16px; }
-.mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 8px; text-align: center; }
+.pack-left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 12px; }
+.mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 4px; text-align: center; }
 .mannequin { display: grid; place-items: center; }
-.mannequin-box .char-svg { width: 220px; height: 355px; }
-.worn-info { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.mannequin-box .char-svg { width: 168px; height: 272px; background: transparent; }
+.worn-info { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .worn-group { display: flex; align-items: flex-start; gap: 8px; }
 .worn-label { font-size: 11px; font-weight: 800; color: #8a6d9b; flex: 0 0 64px; padding-top: 3px; }
 .worn-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
@@ -1565,7 +1565,7 @@ body {
   .sl-detail {
     grid-column: 1 / -1;
   }
-  .mannequin-box .char-svg { width: 170px; height: 275px; }
+  .mannequin-box .char-svg { width: 150px; height: 244px; }
   .wardrobe-scroll { max-height: none; overflow-y: visible; }
   .pack-actions { flex-wrap: wrap; }
 }

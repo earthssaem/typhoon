@@ -1,7 +1,8 @@
 import type { CarrierItem } from '../../types';
 
 // 엔딩 캐릭터 옷 입히기 — 캐리어에 담은(=착용 가능한) 물품만 반영
-export function Character({ outfit }: { outfit: CarrierItem[] }) {
+// showItems: SVG 아래 물품 배지 목록 표시 여부 (캐리어 화면에서는 별도 배지를 쓰므로 false)
+export function Character({ outfit, showItems = true }: { outfit: CarrierItem[]; showItems?: boolean }) {
   const has = (id: string) => outfit.some((o) => o.id === id);
   const cat = (cgory: CarrierItem['category']) => outfit.find((o) => o.category === cgory);
 
@@ -74,14 +75,16 @@ export function Character({ outfit }: { outfit: CarrierItem[] }) {
       </svg>
 
       {/* 착용/소지 물품 배지 */}
-      <div className="char-items">
-        {outfit.length === 0 && <span className="no-item">챙긴 옷이 없어요…</span>}
-        {outfit.map((o) => (
-          <span key={o.id} className="char-badge" title={o.name}>
-            {o.emoji} {o.name}
-          </span>
-        ))}
-      </div>
+      {showItems && (
+        <div className="char-items">
+          {outfit.length === 0 && <span className="no-item">챙긴 옷이 없어요…</span>}
+          {outfit.map((o) => (
+            <span key={o.id} className="char-badge" title={o.name}>
+              {o.emoji} {o.name}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

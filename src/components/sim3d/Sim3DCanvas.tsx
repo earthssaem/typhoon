@@ -5,8 +5,6 @@ import { TyphoonScene } from './TyphoonScene';
 interface Props {
   point: { x: number; z: number };
   setPoint: (p: { x: number; z: number }) => void;
-  moveMode: boolean;
-  exitMoveMode: () => void;
   showHeading: boolean;
   showSemicircle: boolean;
   showNames: boolean;
@@ -14,7 +12,6 @@ interface Props {
   reduced: boolean;
   lowPerf: boolean;
   view: 'top' | 'tilt';
-  ab: { a: { x: number; z: number }; b: { x: number; z: number } };
 }
 
 export default function Sim3DCanvas(p: Props) {
@@ -29,8 +26,6 @@ export default function Sim3DCanvas(p: Props) {
       <TyphoonScene
         point={p.point}
         setPoint={p.setPoint}
-        moveMode={p.moveMode}
-        exitMoveMode={p.exitMoveMode}
         showHeading={p.showHeading}
         showSemicircle={p.showSemicircle}
         showNames={p.showNames}
@@ -38,7 +33,6 @@ export default function Sim3DCanvas(p: Props) {
         reduced={p.reduced}
         lowPerf={p.lowPerf}
         view={p.view}
-        ab={p.ab}
       />
     </Canvas>
   );

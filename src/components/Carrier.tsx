@@ -75,7 +75,7 @@ export function Carrier({ go, patch, state }: StepProps) {
           <div className="mannequin-box">
             <div className="mannequin-head">👗 옷차림 미리보기</div>
             <div className="mannequin">
-              <Character outfit={outfit} />
+              <Character outfit={outfit} showItems={false} />
             </div>
             <div className="worn-info">
               <div className="worn-group">

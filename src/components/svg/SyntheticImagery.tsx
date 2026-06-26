@@ -39,7 +39,38 @@ export function WeatherMapImage({ c }: { c: TyphoonCase }) {
       ))}
       {/* 태풍 기호 */}
       <TyphoonSymbol cx={cx} cy={cy} />
+      {/* 목적지 관측소 일기기호 (기온·운량·바람) */}
+      <StationPlot cx={c.cityX - 7} cy={c.cityY - 4} temp={c.actual.temp} windMs={c.actual.wind} />
     </KoreaMap>
+  );
+}
+
+// 일기기호(관측소 기호): 운량 원 + 기온(왼쪽 위) + 풍향·풍속 깃
+function StationPlot({ cx, cy, temp, windMs }: { cx: number; cy: number; temp: number; windMs: number }) {
+  const len = 6;
+  const ang = (-135 * Math.PI) / 180; // 깃대는 북서 방향
+  const ex = cx + Math.cos(ang) * len;
+  const ey = cy + Math.sin(ang) * len;
+  const barbs = Math.min(4, Math.max(1, Math.round(windMs / 5)));
+  return (
+    <g>
+      {/* 운량 원 (흐림) */}
+      <circle cx={cx} cy={cy} r={2.2} fill="#3a4a63" stroke="#1f3b5c" strokeWidth={0.4} />
+      {/* 풍향·풍속 깃대 */}
+      <line x1={cx} y1={cy} x2={ex} y2={ey} stroke="#1f3b5c" strokeWidth={0.5} />
+      {Array.from({ length: barbs }).map((_, i) => {
+        const d = len - 0.6 - i * 1.1;
+        const px = cx + Math.cos(ang) * d;
+        const py = cy + Math.sin(ang) * d;
+        const tx = px + Math.cos(ang - Math.PI / 2) * 2.4;
+        const ty = py + Math.sin(ang - Math.PI / 2) * 2.4;
+        return <line key={i} x1={px} y1={py} x2={tx} y2={ty} stroke="#1f3b5c" strokeWidth={0.5} />;
+      })}
+      {/* 기온 (왼쪽 위, 빨강) */}
+      <text x={cx - 3} y={cy - 2.6} fontSize={4} fontWeight={800} fill="#c01818" textAnchor="end">
+        {temp}
+      </text>
+    </g>
   );
 }
 

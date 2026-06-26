@@ -1,0 +1,23 @@
+{
+  "name": "typhoon-school-trip",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "수학여행 D-1: 태풍이 올라온대!! — 태풍 구조와 기상자료를 분석해 수학여행지 날씨를 판단하고 준비물을 챙기는 고등학생 대상 체험형 웹앱 (해커톤 프로토타입)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}

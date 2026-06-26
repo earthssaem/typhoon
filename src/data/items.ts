@@ -7,7 +7,7 @@ export const CARRIER_CAPACITY = 10;
 export const ITEMS: CarrierItem[] = [
   { id: 'tshirt', name: '반팔', emoji: '👕', slots: 1, category: 'top' },
   { id: 'thinLong', name: '얇은 긴팔', emoji: '🧥', slots: 1, category: 'top' },
-  { id: 'hoodie', name: '후드/맨투맨', emoji: '🧶', slots: 2, category: 'top' },
+  { id: 'hoodie', name: '후드/맨투맨', emoji: '👚', slots: 2, category: 'top' },
   { id: 'windbreaker', name: '바람막이', emoji: '🧥', slots: 1, category: 'outer' },
   { id: 'rainJacket', name: '방수 재킷', emoji: '🧥', slots: 2, category: 'outer' },
   { id: 'shorts', name: '반바지', emoji: '🩳', slots: 1, category: 'bottom' },

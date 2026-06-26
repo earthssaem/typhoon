@@ -44,14 +44,6 @@ export function Carrier({ go, patch, state }: StepProps) {
   const worn = outfit.filter((it) => WORN_CATS.includes(it.category));
   const carried = outfit.filter((it) => !WORN_CATS.includes(it.category));
 
-  // 여행가방 칸 채우기 (멀티슬롯은 칸을 이어서 차지)
-  const cells: (string | null)[] = [];
-  state.packed.forEach((id) => {
-    const it = itemById(id)!;
-    for (let k = 0; k < it.slots; k++) cells.push(k === 0 ? id : `${id}__`);
-  });
-  while (cells.length < CARRIER_CAPACITY) cells.push(null);
-
   const isFull = used >= CARRIER_CAPACITY;
   const nearFull = used >= CARRIER_CAPACITY - 2 && !isFull;
 
@@ -108,17 +100,24 @@ export function Carrier({ go, patch, state }: StepProps) {
               <div className="sc-base">
                 <div className="sc-handle" />
                 <div className="suitcase-grid">
-                  {cells.map((cell, i) => {
-                    if (cell === null) return <div key={i} className="sc-cell empty" />;
-                    if (cell.endsWith('__')) return <div key={i} className="sc-cell occupied span" />;
-                    const it = itemById(cell)!;
+                  {state.packed.map((id) => {
+                    const it = itemById(id)!;
                     return (
-                      <button key={i} className="sc-cell occupied" onClick={() => remove(cell)} title={`${it.name} 빼기`}>
+                      <button
+                        key={id}
+                        className={`sc-cell occupied${it.slots > 1 ? ' span' : ''}`}
+                        style={{ gridColumn: `span ${it.slots}`, aspectRatio: `${it.slots} / 1` }}
+                        onClick={() => remove(id)}
+                        title={`${it.name} 빼기 (${it.slots}칸)`}
+                      >
                         <span className="sc-emoji">{it.emoji}</span>
                         <small>{it.name}</small>
                       </button>
                     );
                   })}
+                  {Array.from({ length: CARRIER_CAPACITY - used }).map((_, i) => (
+                    <div key={`empty-${i}`} className="sc-cell empty" />
+                  ))}
                 </div>
               </div>
             </div>

@@ -1402,20 +1402,37 @@ body {
 }
 
 /* ───────── 캐리어: 펼친 여행가방 ───────── */
-.pack-layout { display: grid; grid-template-columns: 220px 1fr 300px; gap: 16px; align-items: start; }
-.mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 12px; }
-.mannequin-head { font-size: 13px; font-weight: 700; color: #8a6d9b; margin-bottom: 6px; text-align: center; }
+.weather-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
+.w-badge {
+  background: #f3f6fb; border: 1px solid var(--line); border-radius: 999px;
+  padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted);
+}
+.pack-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
+.pack-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 16px; }
+.mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 8px; text-align: center; }
 .mannequin { display: grid; place-items: center; }
+.mannequin-box .char-svg { width: 220px; height: 355px; }
+.worn-info { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.worn-group { display: flex; align-items: flex-start; gap: 8px; }
+.worn-label { font-size: 11px; font-weight: 800; color: #8a6d9b; flex: 0 0 64px; padding-top: 3px; }
+.worn-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+.worn-chip {
+  background: #eaf2ff; border: 1px solid #d6e3fb; color: var(--brand-d);
+  border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 600;
+}
+.worn-chip.carry { background: #fff4e0; border-color: #f3dcab; color: #8a6d1b; }
+.worn-empty { font-size: 11px; color: var(--muted); }
 .suitcase-box { min-width: 0; }
 .suitcase {
   display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px;
-  background: #355a7a; border-radius: 16px; padding: 12px;
+  background: #355a7a; border-radius: 16px; padding: 14px;
   box-shadow: inset 0 0 0 3px #2a4861, var(--shadow);
 }
 .suitcase.full { box-shadow: inset 0 0 0 3px var(--danger), var(--shadow); }
 .sc-lid {
   background: #2f5170; border-radius: 10px; padding: 10px; position: relative;
-  display: flex; flex-direction: column; justify-content: space-between; min-height: 200px;
+  display: flex; flex-direction: column; justify-content: space-between; min-height: 220px;
 }
 .sc-sticker {
   align-self: flex-start; background: #ffd34e; color: #5a4a10; font-weight: 800; font-size: 12px;
@@ -1427,19 +1444,27 @@ body {
   background: #2f5170; border-radius: 10px; padding: 10px; position: relative;
 }
 .sc-handle { width: 70px; height: 8px; background: #213b52; border-radius: 6px; margin: 0 auto 10px; }
-.suitcase-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.suitcase-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
 .sc-cell {
   aspect-ratio: 1; border-radius: 8px; background: #3c648a; border: 1px dashed #5b87aa;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px;
 }
-.sc-cell small { font-size: 8px; color: #d7e6f2; margin-top: 2px; line-height: 1; }
+.sc-cell small { font-size: 9px; color: #d7e6f2; margin-top: 2px; line-height: 1; }
 .sc-cell.occupied { background: #eaf2ff; border: 1px solid #fff; cursor: pointer; color: var(--ink); }
 .sc-cell.occupied small { color: var(--muted); }
 .sc-cell.occupied.span { background: #d3e4fb; }
 .sc-cell.occupied:hover { box-shadow: 0 0 0 2px #ffffff88; }
-.sc-emoji { font-size: 22px; }
+.sc-emoji { font-size: 24px; }
 .suitcase-box .capacity-bar { margin: 10px 0 4px; }
+.capacity-fill.near { background: linear-gradient(90deg, #f1c40f, #e8743d); }
+.capacity-fill.full { background: linear-gradient(90deg, #e8743d, var(--danger)); }
 .sc-count { text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
+.sc-warning {
+  margin-top: 6px; text-align: right; font-size: 12px; font-weight: 700; color: var(--danger);
+}
+.wardrobe-scroll { max-height: 560px; overflow-y: auto; padding-right: 4px; }
+.pack-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pack-summary { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; flex: 1; }
 
 /* 여행 장면 큰 버전 */
 .trip-scene.big { height: 320px; }
@@ -1472,4 +1497,7 @@ body {
   .sl-detail {
     grid-column: 1 / -1;
   }
+  .mannequin-box .char-svg { width: 170px; height: 275px; }
+  .wardrobe-scroll { max-height: none; overflow-y: visible; }
+  .pack-actions { flex-wrap: wrap; }
 }

@@ -1477,15 +1477,6 @@ body {
 .mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 4px; text-align: center; }
 .mannequin { display: grid; place-items: center; }
 .mannequin-box .char-svg { width: 168px; height: 272px; background: transparent; }
-.worn-info { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-.worn-group { display: flex; align-items: flex-start; gap: 8px; }
-.worn-label { font-size: 11px; font-weight: 800; color: #8a6d9b; flex: 0 0 80px; padding-top: 3px; white-space: nowrap; }
-.worn-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
-.worn-chip {
-  background: #eaf2ff; border: 1px solid #d6e3fb; color: var(--brand-d);
-  border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 600;
-}
-.worn-empty { font-size: 11px; color: var(--muted); }
 .suitcase-box { min-width: 0; }
 .suitcase {
   position: relative;

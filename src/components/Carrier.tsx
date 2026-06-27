@@ -64,15 +64,6 @@ export function Carrier({ go, patch, state }: StepProps) {
             <div className="mannequin">
               <Character outfit={outfit} showItems={false} />
             </div>
-            <div className="worn-info">
-              <div className="worn-group">
-                <span className="worn-label">착용 중</span>
-                <div className="worn-chips">
-                  {outfit.length === 0 && <span className="worn-empty">없음</span>}
-                  {outfit.map((it) => <span key={it.id} className="worn-chip">{it.emoji} {it.name}</span>)}
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="suitcase-box">

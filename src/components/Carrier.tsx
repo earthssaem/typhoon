@@ -43,11 +43,10 @@ export function Carrier({ go, patch, state }: StepProps) {
   const nearFull = used >= CARRIER_CAPACITY - 2 && !isFull;
 
   return (
-    <section className="card fade-in">
+    <section className="card fade-in step7">
       <h2>STEP 7 · 준비물 선택 — {c.cityName}</h2>
-      <p className="q">
-        실제 날씨를 예상해 필요한 옷과 준비물을 선택하세요. 캐리어는 <b>{CARRIER_CAPACITY}칸</b>이며,
-        모든 물품을 담을 수 없습니다.
+      <p className="q step7-q">
+        예상한 날씨에 맞게 필요한 옷과 준비물을 선택하세요. 캐리어는 <b>{CARRIER_CAPACITY}칸</b>이며 모든 물품을 담을 수 없습니다.
       </p>
       <div className="weather-badges">
         <span className="w-badge">📍 {c.cityName}</span>
@@ -57,7 +56,7 @@ export function Carrier({ go, patch, state }: StepProps) {
       </div>
 
       <div className="pack-layout">
-        {/* 위: 캐릭터 + 캐리어 나란히 */}
+        {/* 왼쪽: 옷차림 미리보기 + 캐리어 + 사용량 */}
         <div className="pack-top">
           <div className="mannequin-box">
             <div className="mannequin-head">👗 옷차림 미리보기</div>
@@ -99,10 +98,12 @@ export function Carrier({ go, patch, state }: StepProps) {
           </div>
         </div>
 
-        {/* 아래: 옷장 (가로 배치) */}
+        {/* 오른쪽: 준비물 선택 패널 (목록만 내부 스크롤) */}
         <div className="wardrobe">
-          <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
-          <h4>🚪 옷장</h4>
+          <div className="wardrobe-head">
+            <h4>🎒 준비물 선택</h4>
+            <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
+          </div>
           <div className="wardrobe-scroll">
             {GROUPS.map((g) => {
               const items = ITEMS.filter((i) => i.category === g.cat);

@@ -1079,12 +1079,17 @@ body {
   border: 1px solid #ece3d6;
   border-radius: 14px;
   padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
+.wardrobe-head { flex: 0 0 auto; }
+.wardrobe-head h4 { margin: 0 0 4px; font-size: 15px; }
 .wardrobe-group { margin-bottom: 0; }
 .group-label { font-size: 13px; font-weight: 700; color: #8a6d4b; margin-bottom: 6px; }
 .hanger-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
 }
 .hanger {
@@ -1471,9 +1476,13 @@ body {
   background: #f3f6fb; border: 1px solid var(--line); border-radius: 999px;
   padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted);
 }
-.pack-layout { display: flex; flex-direction: column; gap: 16px; }
-/* 위: 캐릭터(자동 폭) + 캐리어(남는 폭) 나란히 */
-.pack-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+/* STEP 7 상단 여백 축소 */
+.step7 .q { margin: 4px 0 10px; }
+.step7 .weather-badges { margin: -2px 0 12px; }
+/* 본문: 왼쪽(미리보기+캐리어) | 오른쪽(준비물 패널) 2열 */
+.pack-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; align-items: start; }
+/* 왼쪽 작업 영역: 미리보기(자동 폭) + 캐리어(남는 폭) 나란히 */
+.pack-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; }
 .mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 12px; }
 .mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 4px; text-align: center; }
 .mannequin { display: grid; place-items: center; }
@@ -1510,13 +1519,25 @@ body {
 .sc-warning {
   margin-top: 6px; text-align: right; font-size: 12px; font-weight: 700; color: var(--danger);
 }
+/* 준비물 목록만 내부 스크롤 (제목·안내는 위에 고정) */
 .wardrobe-scroll {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 10px 14px;
-  align-items: start;
+  flex: 1 1 auto;
+  min-height: 220px;
+  max-height: calc(100vh - 460px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 6px;
+  margin-top: 4px;
 }
-.pack-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pack-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  position: sticky; bottom: 0; z-index: 5;
+  background: var(--card); border-top: 1px solid var(--line);
+  margin: 22px -22px -22px; padding: 14px 22px;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
 .pack-summary { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; flex: 1; }
 
 /* 여행 장면 큰 버전 */
@@ -1529,6 +1550,8 @@ body {
 /* 태블릿: 정보 패널 폭을 줄이고 2열 유지 */
 @media (max-width: 1024px) and (min-width: 861px) {
   .sim3d-grid { grid-template-columns: 1fr 280px; }
+  /* 작은 데스크톱·태블릿: 준비물 카드가 너무 작아지지 않게 50:50 */
+  .pack-layout { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 860px) {
   .sim-grid,
@@ -1557,7 +1580,10 @@ body {
   .sl-detail {
     grid-column: 1 / -1;
   }
+  /* 모바일: 미리보기 → 캐리어 → 준비물 패널 → 버튼 순 1열, 패널 고정 높이 해제 */
   .pack-top { grid-template-columns: 1fr; }
   .mannequin-box .char-svg { width: 128px; height: 208px; }
-  .pack-actions { flex-wrap: wrap; }
+  .suitcase-box { max-width: none; }
+  .wardrobe-scroll { max-height: none; min-height: 0; overflow-y: visible; padding-right: 0; }
+  .pack-actions { position: static; margin: 16px 0 0; padding: 0; background: none; border-top: none; flex-wrap: wrap; }
 }

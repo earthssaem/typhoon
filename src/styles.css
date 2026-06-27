@@ -1080,7 +1080,7 @@ body {
   border-radius: 14px;
   padding: 14px 16px;
 }
-.wardrobe-group { margin-bottom: 10px; }
+.wardrobe-group { margin-bottom: 0; }
 .group-label { font-size: 13px; font-weight: 700; color: #8a6d4b; margin-bottom: 6px; }
 .hanger-row {
   display: grid;
@@ -1471,13 +1471,14 @@ body {
   background: #f3f6fb; border: 1px solid var(--line); border-radius: 999px;
   padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted);
 }
-.pack-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
-.pack-left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pack-layout { display: flex; flex-direction: column; gap: 16px; }
+/* 위: 캐릭터(자동 폭) + 캐리어(남는 폭) 나란히 */
+.pack-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
 .mannequin-box { background: linear-gradient(180deg, #fbeffb, #eef3ff); border: 1px solid #ecdcf0; border-radius: 16px; padding: 12px; }
 .mannequin-head { font-size: 14px; font-weight: 700; color: #8a6d9b; margin-bottom: 4px; text-align: center; }
 .mannequin { display: grid; place-items: center; }
-.mannequin-box .char-svg { width: 168px; height: 272px; background: transparent; }
-.suitcase-box { min-width: 0; }
+.mannequin-box .char-svg { width: 128px; height: 208px; background: transparent; }
+.suitcase-box { min-width: 0; max-width: 460px; }
 .suitcase {
   position: relative;
   background: #355a7a; border-radius: 16px; padding: 18px 14px 14px;
@@ -1509,7 +1510,12 @@ body {
 .sc-warning {
   margin-top: 6px; text-align: right; font-size: 12px; font-weight: 700; color: var(--danger);
 }
-.wardrobe-scroll { max-height: 560px; overflow-y: auto; padding-right: 4px; }
+.wardrobe-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px 14px;
+  align-items: start;
+}
 .pack-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .pack-summary { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; flex: 1; }
 
@@ -1551,7 +1557,7 @@ body {
   .sl-detail {
     grid-column: 1 / -1;
   }
-  .mannequin-box .char-svg { width: 150px; height: 244px; }
-  .wardrobe-scroll { max-height: none; overflow-y: visible; }
+  .pack-top { grid-template-columns: 1fr; }
+  .mannequin-box .char-svg { width: 128px; height: 208px; }
   .pack-actions { flex-wrap: wrap; }
 }

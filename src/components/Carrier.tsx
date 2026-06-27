@@ -57,8 +57,8 @@ export function Carrier({ go, patch, state }: StepProps) {
       </div>
 
       <div className="pack-layout">
-        {/* 왼쪽: 캐릭터 + 착용정보 + 캐리어 */}
-        <div className="pack-left">
+        {/* 위: 캐릭터 + 캐리어 나란히 */}
+        <div className="pack-top">
           <div className="mannequin-box">
             <div className="mannequin-head">👗 옷차림 미리보기</div>
             <div className="mannequin">
@@ -99,7 +99,7 @@ export function Carrier({ go, patch, state }: StepProps) {
           </div>
         </div>
 
-        {/* 오른쪽: 옷장 */}
+        {/* 아래: 옷장 (가로 배치) */}
         <div className="wardrobe">
           <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
           <h4>🚪 옷장</h4>

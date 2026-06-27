@@ -1514,7 +1514,7 @@ body {
 .capacity-fill.near { background: linear-gradient(90deg, #f1c40f, #e8743d); }
 .capacity-fill.full { background: linear-gradient(90deg, #e8743d, var(--danger)); }
 .sc-count { text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
-.sc-hint { margin-top: 6px; text-align: right; font-size: 11px; color: var(--muted); }
+.sc-hint { margin-bottom: 8px; text-align: left; font-size: 11px; color: var(--muted); }
 .sc-warning {
   margin-top: 6px; text-align: right; font-size: 12px; font-weight: 700; color: var(--danger);
 }

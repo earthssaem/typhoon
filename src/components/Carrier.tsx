@@ -104,13 +104,13 @@ export function Carrier({ go, patch, state }: StepProps) {
               <div className={`capacity-fill${isFull ? ' full' : nearFull ? ' near' : ''}`} style={{ width: `${(used / CARRIER_CAPACITY) * 100}%` }} />
             </div>
             <div className="sc-count">🧳 {used} / {CARRIER_CAPACITY}칸 사용</div>
-            <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
             {overflow && <div className="sc-warning">⚠️ 캐리어 공간이 부족합니다.</div>}
           </div>
         </div>
 
         {/* 오른쪽: 옷장 */}
         <div className="wardrobe">
+          <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
           <h4>🚪 옷장</h4>
           <div className="wardrobe-scroll">
             {GROUPS.map((g) => {

@@ -17,9 +17,6 @@ const GROUPS: { cat: CarrierItem['category']; label: string; icon: string }[] = 
   { cat: 'extra', label: '기타', icon: '🎒' },
 ];
 
-// "착용" 카테고리 vs "소지품" 카테고리 구분 (캐릭터가 직접 입는지 여부)
-const WORN_CATS: CarrierItem['category'][] = ['top', 'outer', 'bottom', 'shoes'];
-
 // STEP 7. 캐리어 꾸리기 — 실제 여행가방에 칸칸이 담고, 마네킹에 옷 입히기
 export function Carrier({ go, patch, state }: StepProps) {
   const c = CASES[state.destination!];
@@ -39,10 +36,8 @@ export function Carrier({ go, patch, state }: StepProps) {
   const remove = (id: string) => patch({ packed: state.packed.filter((p) => p !== id) });
   const toggle = (id: string) => (state.packed.includes(id) ? remove(id) : add(id));
 
-  // 마네킹 미리보기 (담은 옷을 입은 모습)
+  // 마네킹 미리보기 (담은 물품을 모두 착용한 모습)
   const outfit: CarrierItem[] = state.packed.map((id) => itemById(id)!).filter(Boolean);
-  const worn = outfit.filter((it) => WORN_CATS.includes(it.category));
-  const carried = outfit.filter((it) => !WORN_CATS.includes(it.category));
 
   const isFull = used >= CARRIER_CAPACITY;
   const nearFull = used >= CARRIER_CAPACITY - 2 && !isFull;
@@ -73,15 +68,8 @@ export function Carrier({ go, patch, state }: StepProps) {
               <div className="worn-group">
                 <span className="worn-label">착용 중</span>
                 <div className="worn-chips">
-                  {worn.length === 0 && <span className="worn-empty">없음</span>}
-                  {worn.map((it) => <span key={it.id} className="worn-chip">{it.emoji} {it.name}</span>)}
-                </div>
-              </div>
-              <div className="worn-group">
-                <span className="worn-label">준비한 소지품</span>
-                <div className="worn-chips">
-                  {carried.length === 0 && <span className="worn-empty">없음</span>}
-                  {carried.map((it) => <span key={it.id} className="worn-chip carry">{it.emoji} {it.name}</span>)}
+                  {outfit.length === 0 && <span className="worn-empty">없음</span>}
+                  {outfit.map((it) => <span key={it.id} className="worn-chip">{it.emoji} {it.name}</span>)}
                 </div>
               </div>
             </div>
@@ -89,42 +77,34 @@ export function Carrier({ go, patch, state }: StepProps) {
 
           <div className="suitcase-box">
             <div className={`suitcase${isFull ? ' full' : ''}`}>
-              {/* 뚜껑 (메시 포켓) */}
-              <div className="sc-lid">
-                <div className="sc-sticker">🌀 TRIP</div>
-                <div className="sc-pocket">
-                  <span className="sc-pocket-label">MESH POCKET</span>
-                </div>
-              </div>
-              {/* 본체 */}
-              <div className="sc-base">
-                <div className="sc-handle" />
-                <div className="suitcase-grid">
-                  {state.packed.map((id) => {
-                    const it = itemById(id)!;
-                    return (
-                      <button
-                        key={id}
-                        className={`sc-cell occupied${it.slots > 1 ? ' span' : ''}`}
-                        style={{ gridColumn: `span ${it.slots}`, aspectRatio: `${it.slots} / 1` }}
-                        onClick={() => remove(id)}
-                        title={`${it.name} 빼기 (${it.slots}칸)`}
-                      >
-                        <span className="sc-emoji">{it.emoji}</span>
-                        <small>{it.name}</small>
-                      </button>
-                    );
-                  })}
-                  {Array.from({ length: CARRIER_CAPACITY - used }).map((_, i) => (
-                    <div key={`empty-${i}`} className="sc-cell empty" />
-                  ))}
-                </div>
+              <div className="sc-sticker">🌀 TRIP</div>
+              <div className="sc-handle" />
+              <div className="suitcase-grid">
+                {state.packed.map((id) => {
+                  const it = itemById(id)!;
+                  return (
+                    <button
+                      key={id}
+                      className={`sc-cell occupied${it.slots > 1 ? ' span' : ''}`}
+                      style={{ gridColumn: `span ${it.slots}`, aspectRatio: `${it.slots} / 1` }}
+                      onClick={() => remove(id)}
+                      title={`${it.name} 빼기 (${it.slots}칸)`}
+                    >
+                      <span className="sc-emoji">{it.emoji}</span>
+                      <small>{it.name}</small>
+                    </button>
+                  );
+                })}
+                {Array.from({ length: CARRIER_CAPACITY - used }).map((_, i) => (
+                  <div key={`empty-${i}`} className="sc-cell empty" />
+                ))}
               </div>
             </div>
             <div className="capacity-bar">
               <div className={`capacity-fill${isFull ? ' full' : nearFull ? ' near' : ''}`} style={{ width: `${(used / CARRIER_CAPACITY) * 100}%` }} />
             </div>
             <div className="sc-count">🧳 {used} / {CARRIER_CAPACITY}칸 사용</div>
+            <div className="sc-hint">💡 담은 물품을 다시 클릭하면 캐리어에서 빠집니다.</div>
             {overflow && <div className="sc-warning">⚠️ 캐리어 공간이 부족합니다.</div>}
           </div>
         </div>

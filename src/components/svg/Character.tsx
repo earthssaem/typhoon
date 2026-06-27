@@ -35,6 +35,13 @@ export function Character({ outfit, showItems = true }: { outfit: CarrierItem[];
         {/* 머리 */}
         <circle cx={60} cy={32} r={18} fill="#ffe0bd" stroke="#e0b48c" strokeWidth={1} />
         {has('cap') && <path d="M40,28 Q60,6 80,28 L82,30 L38,30 Z" fill="#2b6cb0" />}
+        {/* 선크림 (볼에 바른 흔적) */}
+        {has('sunscreen') && (
+          <>
+            <circle cx={47} cy={37} r={3.4} fill="#ffffff" opacity={0.85} />
+            <circle cx={73} cy={37} r={3.4} fill="#ffffff" opacity={0.85} />
+          </>
+        )}
         <circle cx={53} cy={32} r={2} fill="#333" />
         <circle cx={67} cy={32} r={2} fill="#333" />
         <path d="M54,40 Q60,44 66,40" fill="none" stroke="#b5774e" strokeWidth={1.5} />
@@ -61,9 +68,25 @@ export function Character({ outfit, showItems = true }: { outfit: CarrierItem[];
           </>
         )}
 
+        {/* 양말 (신발 위로 살짝 보이는 양말목) */}
+        {has('socks') && (
+          <>
+            <rect x={41} y={159} width={16} height={7} rx={2} fill="#f4f4f4" stroke="#d8d8d8" strokeWidth={0.5} />
+            <rect x={63} y={159} width={16} height={7} rx={2} fill="#f4f4f4" stroke="#d8d8d8" strokeWidth={0.5} />
+          </>
+        )}
+
         {/* 신발 */}
         <rect x={40} y={164} width={18} height={10} rx={4} fill={shoeColor} />
         <rect x={62} y={164} width={18} height={10} rx={4} fill={shoeColor} />
+
+        {/* 방수팩 (어깨에 멘 작은 크로스백) */}
+        {has('drybag') && (
+          <g>
+            <line x1={48} y1={50} x2={30} y2={96} stroke="#1d6e63" strokeWidth={3} />
+            <rect x={20} y={88} width={18} height={20} rx={4} fill="#2a9d8f" stroke="#1d6e63" strokeWidth={1} />
+          </g>
+        )}
 
         {/* 우산 */}
         {has('umbrella') && (
